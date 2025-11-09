@@ -30,7 +30,7 @@ const steps = [
   },
 ];
 
-// Floating Ambient Orbs
+// 🌌 Floating Ambient Orbs
 function FloatingOrbs() {
   const group = useRef<THREE.Group>(null);
 
@@ -47,13 +47,22 @@ function FloatingOrbs() {
           rotationIntensity={0.5}
           floatIntensity={0.8}
         >
-          <Sphere args={[0.06, 16, 16]} position={[
-            (Math.random() - 0.5) * 8,
-            (Math.random() - 0.5) * 4,
-            (Math.random() - 0.5) * 4,
-          ]}>
+          <Sphere
+            args={[0.06, 16, 16]}
+            position={[
+              (Math.random() - 0.5) * 8,
+              (Math.random() - 0.5) * 4,
+              (Math.random() - 0.5) * 4,
+            ]}
+          >
             <meshStandardMaterial
-              color={i % 3 === 0 ? "#8b5cf6" : i % 3 === 1 ? "#06b6d4" : "#f59e0b"}
+              color={
+                i % 3 === 0
+                  ? "#8b5cf6"
+                  : i % 3 === 1
+                  ? "#06b6d4"
+                  : "#f59e0b"
+              }
               emissiveIntensity={0.4}
               emissive={i % 2 ? "#8b5cf6" : "#06b6d4"}
               transparent
@@ -66,10 +75,10 @@ function FloatingOrbs() {
   );
 }
 
-// MAIN SECTION const HowItWorks = () => {
+const HowItWorks = () => {
   return (
     <section className="relative py-40 overflow-hidden">
-      {/* Cinematic 3D Background */}
+      {/* 🌠 Cinematic 3D Background */}
       <div className="absolute inset-0 z-0">
         <Canvas camera={{ position: [0, 0, 8], fov: 70 }}>
           <ambientLight intensity={0.5} />
