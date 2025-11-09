@@ -1,34 +1,66 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
+    /* ==============================
+       ⚙️ CORE SETTINGS
+       ============================== */
+    "target": "ES2022",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "types": ["three"],
+    /* ==============================
+       💡 MODULE + JSX
+       ============================== */
     "module": "esnext",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
     "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    /* ==============================
+       🧠 STRICTNESS + CHECKS
+       ============================== */
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "noEmit": true,
     "incremental": true,
+    /* ==============================
+       🧭 PATH ALIASES
+       ============================== */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    /* ==============================
+       🧩 NEXT.JS PLUGIN
+       ============================== */
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "allowJs": true
   },
+  /* ==============================
+     🧾 INCLUDED FILES
+     ============================== */
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  /* ==============================
+     🚫 EXCLUDED FOLDERS
+     ============================== */
+  "exclude": [
+    "node_modules"
+  ]
 }
