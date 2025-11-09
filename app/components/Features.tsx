@@ -45,7 +45,28 @@ const features = [
     description: "Connects with your existing dental software - DenGro, Dentrix, Open Dental, Eaglesoft, and more.",
     gradient: "from-indigo-500 via-violet-500 to-indigo-600",
     position: "right"
-  }
+  },
+  {
+    icon: BarChart3,
+    title: "Track\nConversions",
+    description: "See exactly which calls become appointments and which inquiries need follow-up from your team.",
+    gradient: "from-orange-500 via-amber-500 to-orange-600",
+    position: "left"
+  },
+  {
+    icon: Calendar,
+    title: "Appointment\nScheduling",
+    description: "Books cleanings, exams, root canals, and consultations—even manages same-day emergency slots.",
+    gradient: "from-purple-500 via-pink-500 to-purple-600",
+    position: "right"
+  },
+  {
+    icon: Calendar,
+    title: "Appointment\nScheduling",
+    description: "Books cleanings, exams, root canals, and consultations—even manages same-day emergency slots.",
+    gradient: "from-purple-500 via-pink-500 to-purple-600",
+    position: "left"
+  },
 ];
 
 const Features = () => {
