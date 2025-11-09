@@ -25,7 +25,6 @@ const features = [
   { icon: "🔗", title: "Two-Way Sync", description: "Bidirectional communication with your existing systems" },
 ];
 
-// 3D background particles
 function ParticleField() {
   const points = useRef<THREE.Points>(null);
   const positions = useMemo(() => {
@@ -58,10 +57,7 @@ function ParticleField() {
   );
 }
 
-// ==============================
-// Animated Orbiting Integrations
-// ==============================
-const ORBIT_SPEED = 0.2; // Increase for faster rotation
+const ORBIT_SPEED = 0.2; 
 
 function OrbitingIntegrations() {
   const [angle, setAngle] = useState(0);
@@ -124,9 +120,6 @@ function OrbitingIntegrations() {
   );
 }
 
-// ========================
-// Main Integrations Section
-// ========================
 const Integrations = () => {
   return (
     <section className="relative py-40 overflow-hidden">

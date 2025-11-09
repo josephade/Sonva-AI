@@ -30,7 +30,7 @@ const steps = [
   },
 ];
 
-// === Floating Ambient Orbs ===
+// Floating Ambient Orbs
 function FloatingOrbs() {
   const group = useRef<THREE.Group>(null);
 
@@ -66,11 +66,10 @@ function FloatingOrbs() {
   );
 }
 
-// === MAIN SECTION ===
-const HowItWorks = () => {
+// MAIN SECTION const HowItWorks = () => {
   return (
     <section className="relative py-40 overflow-hidden">
-      {/* === Cinematic 3D Background === */}
+      {/* Cinematic 3D Background */}
       <div className="absolute inset-0 z-0">
         <Canvas camera={{ position: [0, 0, 8], fov: 70 }}>
           <ambientLight intensity={0.5} />
@@ -83,7 +82,7 @@ const HowItWorks = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/95 backdrop-blur-[2px]" />
       </div>
 
-      {/* === Header === */}
+      {/* Header */}
       <div className="relative z-10 container mx-auto px-4 max-w-5xl text-center mb-24">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
@@ -103,7 +102,7 @@ const HowItWorks = () => {
         </motion.p>
       </div>
 
-      {/* === Steps Grid === */}
+      {/* Steps Grid */}
       <div className="relative z-10 container mx-auto max-w-6xl px-4">
         <div className="flex flex-col md:gap-24 gap-12 relative">
           {/* Connecting line glow */}

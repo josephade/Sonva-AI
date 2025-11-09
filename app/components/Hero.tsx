@@ -7,7 +7,6 @@ import { ArrowRight, Phone, Calendar, BarChart3 } from "lucide-react";
 const Hero = () => {
   const controls = useAnimation();
 
-  // Glow pulse animation for headline text
   useEffect(() => {
     controls.start({
       textShadow: [
@@ -25,7 +24,7 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
-      {/* === Animated Background Layers === */}
+      {/* Animated Background Layers */}
       <motion.div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/hero-bg.jpg')" }}
@@ -34,7 +33,7 @@ const Hero = () => {
         transition={{ duration: 2, ease: "easeOut" }}
       />
 
-      {/* Floating gradient cloud (moves once and stays) */}
+      {/* Floating gradient cloud */}
       <motion.div
         className="absolute top-[-10%] left-[10%] w-[600px] h-[600px] bg-gradient-to-br from-primary/40 to-accent/40 blur-[120px] rounded-full opacity-40"
         initial={{ x: 0, y: 0, rotate: 0 }}
@@ -49,7 +48,7 @@ const Hero = () => {
         }}
       />
 
-      {/* Bottom-right gradient — one-time subtle motion */}
+      {/* Bottom-right gradient */}
       <motion.div
         className="absolute bottom-[-20%] right-[10%] w-[500px] h-[500px] bg-gradient-to-tr from-accent/30 to-primary/30 blur-[100px] rounded-full opacity-30"
         initial={{ x: 0, y: 0, scale: 1 }}
@@ -64,7 +63,7 @@ const Hero = () => {
         }}
       />
 
-      {/* === Foreground Content === */}
+      {/* Foreground Content */}
       <div className="container relative z-10 px-4 py-20 mx-auto text-center">
         <motion.div
           className="max-w-4xl mx-auto space-y-8"
@@ -77,7 +76,7 @@ const Hero = () => {
             },
           }}
         >
-          {/* === Badge === */}
+          {/* Badge */}
           <motion.div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20"
             variants={{
@@ -95,7 +94,7 @@ const Hero = () => {
             </span>
           </motion.div>
 
-          {/* === Headline === */}
+          {/* Headline */}
           <motion.h1
             className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight"
             variants={{
@@ -120,7 +119,7 @@ const Hero = () => {
             </motion.span>
           </motion.h1>
 
-          {/* === Subheadline === */}
+          {/* Subheadline */}
           <motion.p
             className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto"
             variants={{
@@ -132,7 +131,7 @@ const Hero = () => {
             cancellations for your dental practice — 24/7.
           </motion.p>
 
-          {/* === CTA Buttons === */}
+          {/* CTA Buttons */}
           <motion.div
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
             variants={{
@@ -165,7 +164,7 @@ const Hero = () => {
             </motion.button>
           </motion.div>
 
-          {/* === Floating Stats === */}
+          {/* Floating Stats */}
           <motion.div
             className="grid grid-cols-3 gap-8 pt-12 max-w-2xl mx-auto"
             variants={{

@@ -74,7 +74,7 @@ const VoiceDemo = () => {
       transition={{ duration: 1, ease: "easeOut" }}
       id="voice-demo"
     >
-      {/* === Floating Gradient Blobs === */}
+      {/* Floating Gradient Blobs */}
       <motion.div
         className="absolute top-[10%] left-[5%] w-[400px] h-[400px] rounded-full blur-[100px] bg-primary/30"
         animate={{
@@ -94,7 +94,7 @@ const VoiceDemo = () => {
 
       <div className="container relative z-10 px-4 mx-auto">
         <div className="max-w-4xl mx-auto text-center space-y-10">
-          {/* === Demo Badge === */}
+          {/* Demo Badge */}
           <motion.div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20"
             initial={{ opacity: 0, y: -10 }}
@@ -105,7 +105,7 @@ const VoiceDemo = () => {
             <span className="text-sm font-medium">Live Demo</span>
           </motion.div>
 
-          {/* === Headline === */}
+          {/* Headline */}
           <motion.h2
             className="text-4xl md:text-5xl font-bold"
             initial={{ opacity: 0, y: 20 }}
@@ -125,14 +125,14 @@ const VoiceDemo = () => {
             with a natural, professional voice.
           </motion.p>
 
-          {/* === Audio Player Card === */}
+          {/* Audio Player Card */}
           <motion.div
             className="relative rounded-2xl border bg-card/60 text-card-foreground shadow-md p-10 border-border backdrop-blur-md overflow-hidden"
             initial={{ scale: 0.9, opacity: 0 }}
             whileInView={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
           >
-            {/* 🌌 Glowing rotating ring behind button */}
+            {/* Glowing rotating ring behind button */}
             <AnimatePresence>
               {isPlaying && (
                 <motion.div
@@ -152,7 +152,7 @@ const VoiceDemo = () => {
               )}
             </AnimatePresence>
 
-            {/* 🎵 Center button */}
+            {/* Center button */}
             <div className="flex flex-col items-center gap-8">
               <motion.div
                 className="relative w-28 h-28 flex items-center justify-center rounded-full bg-primary/10 border border-primary/30 shadow-inner"

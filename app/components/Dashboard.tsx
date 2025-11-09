@@ -7,14 +7,13 @@ import * as THREE from "three";
 import { useRef, Suspense } from "react";
 import { PhoneIncoming, CalendarCheck2, BarChart3 } from "lucide-react";
 
-// === STATS DATA ===
+// STATS DATA
 const stats = [
   { icon: <PhoneIncoming className="w-6 h-6 text-primary" />, value: "156", label: "Calls This Week" },
   { icon: <CalendarCheck2 className="w-6 h-6 text-primary" />, value: "148", label: "Appointments Booked" },
   { icon: <BarChart3 className="w-6 h-6 text-primary" />, value: "94.8%", label: "Conversion Rate" },
 ];
 
-// === 3D Scene ===
 function HolographicRings() {
   const group = useRef<THREE.Group>(null);
 
@@ -67,14 +66,14 @@ function FloatingParticles() {
   );
 }
 
-// === MAIN DASHBOARD ===
+// MAIN DASHBOARD 
 const Dashboard = () => {
   return (
     <section className="relative py-40 overflow-hidden">
-      {/* === Background Layer === */}
+      {/* Background Layer */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(139,92,246,0.12),transparent_70%),radial-gradient(circle_at_70%_70%,rgba(6,182,212,0.12),transparent_70%)] animate-gradient-slow" />
 
-      {/* === 3D Scene === */}
+      {/* 3D Scene */}
       <div className="absolute inset-0 z-0">
         <Canvas camera={{ position: [0, 0, 7], fov: 60 }}>
           <ambientLight intensity={0.4} />
@@ -90,7 +89,7 @@ const Dashboard = () => {
         </Canvas>
       </div>
 
-      {/* === Foreground === */}
+      {/* Foreground */}
       <div className="relative container mx-auto px-4 z-10">
         {/* Header */}
         <motion.div
@@ -110,7 +109,7 @@ const Dashboard = () => {
           </p>
         </motion.div>
 
-        {/* === Dashboard Preview in 3D === */}
+        {/* Dashboard Preview in 3D */}
         <div className="relative max-w-5xl mx-auto mb-16">
           <div className="absolute -inset-10 bg-gradient-to-r from-primary/20 to-accent/20 blur-3xl opacity-70 rounded-[2rem]" />
           <motion.div
@@ -135,7 +134,7 @@ const Dashboard = () => {
           </motion.div>
         </div>
 
-        {/* === Floating Stats === */}
+        {/* Floating Stats */}
         <div className="grid md:grid-cols-3 gap-6 mt-20">
           {stats.map((stat, i) => (
             <motion.div

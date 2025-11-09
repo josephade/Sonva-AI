@@ -16,7 +16,7 @@ const Navbar = () => {
             <span className="text-xl font-bold">Sonva AI</span>
           </div>
           
-          {/* Desktop Navigation - Centered */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8 absolute left-1/2 -translate-x-1/2">
             <a href="#features" className="text-sm font-medium hover:text-primary transition-colors">
               Features
