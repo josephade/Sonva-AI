@@ -34,7 +34,7 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Right: Login Button */}
+          {/* Right: Login and Book Demo Buttons */}
           <div className="flex items-center space-x-4">
             <motion.a
               href="#login"
@@ -43,6 +43,15 @@ const Navbar = () => {
               className="hidden md:inline-block px-4 py-2 rounded-lg text-sm font-semibold text-primary border border-primary/40 hover:bg-primary/10 transition-all"
             >
               Login
+            </motion.a>
+            <motion.a
+              href="#demo"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300 }}
+              className="hidden md:inline-block px-6 py-2.5 rounded-full text-sm font-semibold text-white bg-black hover:bg-gray-900 transition-all border border-gray-200"
+            >
+              Book Demo
             </motion.a>
 
             {/* Mobile Menu Button */}
@@ -81,6 +90,12 @@ const Navbar = () => {
               className="block text-sm font-semibold text-primary border border-primary/40 px-4 py-2 rounded-lg hover:bg-primary/10 transition-all"
             >
               Login
+            </a>
+            <a
+              href="#demo"
+              className="block text-sm font-semibold text-white bg-black px-6 py-2.5 rounded-full hover:text-primary transition-colorstext-center"
+            >
+              Book Demo
             </a>
           </motion.div>
         )}

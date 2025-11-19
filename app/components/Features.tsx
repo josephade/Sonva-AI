@@ -65,7 +65,7 @@ const features = [
   },
   {
     icon: Users,
-    title: "Practice\nIntegration",
+    title: "PMS\nIntegration",
     description:
       "Connects with your existing dental software - DenGro, Dentrix, Open Dental, Eaglesoft and more.",
     gradient: "from-indigo-500 via-violet-500 to-indigo-600",
@@ -97,7 +97,7 @@ const Features = () => {
           <div className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-primary/20 backdrop-blur-sm mb-10">
             <Zap className="w-6 h-6 text-primary" />
             <span className="text-base font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Complete Dental Reception Automation
+              Product Features
             </span>
           </div>
 
@@ -109,7 +109,7 @@ const Features = () => {
           </h2>
 
           <p className="text-2xl md:text-3xl text-muted-foreground font-light max-w-3xl mx-auto">
-            Sonva handles your entire reception desk - instantly
+            Faster. Smarter. Efficient.
           </p>
         </div>
 

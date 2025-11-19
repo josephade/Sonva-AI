@@ -165,7 +165,7 @@ const Integrations = () => {
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
               <span className="block">Connect Your</span>
               <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
-                Dental Practice Software
+                 Practice Management Software
               </span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
