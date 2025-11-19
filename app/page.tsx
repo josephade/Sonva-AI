@@ -7,6 +7,7 @@ import Integrations from "./components/Integrations";
 import Dashboard from "./components/Dashboard";
 import CTA from "./components/CTA";
 import Footer from "./components/Footer";
+import FAQ from "./components/FAQ";
 
 const Index = () => {
   return (
@@ -14,12 +15,13 @@ const Index = () => {
       <Navbar />
       <main>
         <Hero />
-        <VoiceDemo />
+        {/* <VoiceDemo /> */}
         <Features />
         <Integrations />
         <Dashboard />*
         <HowItWorks />
         <CTA /> 
+        <FAQ />
       </main>
       <Footer />
     </div>

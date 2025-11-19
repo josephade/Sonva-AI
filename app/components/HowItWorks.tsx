@@ -30,7 +30,6 @@ const steps = [
   },
 ];
 
-// 🌌 Floating Ambient Orbs
 function FloatingOrbs() {
   const group = useRef<THREE.Group>(null);
 
@@ -78,7 +77,6 @@ function FloatingOrbs() {
 const HowItWorks = () => {
   return (
     <section className="relative py-40 overflow-hidden">
-      {/* 🌠 Cinematic 3D Background */}
       <div className="absolute inset-0 z-0">
         <Canvas camera={{ position: [0, 0, 8], fov: 70 }}>
           <ambientLight intensity={0.5} />
@@ -92,12 +90,12 @@ const HowItWorks = () => {
       </div>
 
       {/* Header */}
-      <div className="relative z-10 container mx-auto px-4 max-w-5xl text-center mb-24">
+      <div className="relative z-10 container mx-auto px-4 max-w-5xl text-center mb-24 ">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
-          className="text-5xl md:text-6xl font-bold mb-6"
+          className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent"
         >
           How It Works
         </motion.h2>
@@ -172,7 +170,6 @@ const HowItWorks = () => {
           className="text-center mt-24"
         >
           <div className="inline-flex items-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 backdrop-blur-sm">
-            <span className="text-primary font-semibold">Ready in under 1 hour</span>
             <span className="text-muted-foreground">• Minimal setup required</span>
           </div>
         </motion.div>

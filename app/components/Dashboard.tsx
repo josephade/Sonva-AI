@@ -6,8 +6,8 @@ import { motion } from "framer-motion";
 import * as THREE from "three";
 import { useRef, Suspense } from "react";
 import { PhoneIncoming, CalendarCheck2, BarChart3 } from "lucide-react";
+import BookNowButton from "./BookNowButton";
 
-// STATS DATA
 const stats = [
   { icon: <PhoneIncoming className="w-6 h-6 text-primary" />, value: "156", label: "Calls This Week" },
   { icon: <CalendarCheck2 className="w-6 h-6 text-primary" />, value: "148", label: "Appointments Booked" },
@@ -65,11 +65,12 @@ function FloatingParticles() {
     </points>
   );
 }
-
 // MAIN DASHBOARD 
 const Dashboard = () => {
   return (
     <section className="relative py-40 overflow-hidden">
+
+      
       {/* Background Layer */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(139,92,246,0.12),transparent_70%),radial-gradient(circle_at_70%_70%,rgba(6,182,212,0.12),transparent_70%)] animate-gradient-slow" />
 
@@ -88,9 +89,12 @@ const Dashboard = () => {
           <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.6} />
         </Canvas>
       </div>
-
+      
       {/* Foreground */}
       <div className="relative container mx-auto px-4 z-10">
+
+        
+        
         {/* Header */}
         <motion.div
           className="text-center max-w-3xl mx-auto mb-20"
@@ -160,6 +164,8 @@ const Dashboard = () => {
         </div>
       </div>
     </section>
+
+    
   );
 };
 

@@ -6,6 +6,7 @@ import { Points, PointMaterial, OrbitControls } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { Check, Workflow, ArrowRight, Zap } from "lucide-react";
 import * as THREE from "three";
+import BookNowButton from "./BookNowButton";
 
 const integrations = [
   { name: "Dentrix", logo: "🦷", color: "from-blue-500/20 to-cyan-500/20" },
@@ -122,7 +123,7 @@ function OrbitingIntegrations() {
 
 const Integrations = () => {
   return (
-    <section className="relative py-40 overflow-hidden">
+    <section className="relative py-4 pt-20 overflow-hidden">
       {/* Cinematic 3D Background */}
       <div className="absolute inset-0 z-0">
         <Canvas camera={{ position: [0, 0, 8], fov: 65 }}>
@@ -135,6 +136,12 @@ const Integrations = () => {
         </Canvas>
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90 backdrop-blur-[2px]" />
       </div>
+
+      {/* Mid-section CTA */}
+      <div className="relative z-20 flex justify-center mb-16 -mt-12">
+        <BookNowButton href="#book-demo" />
+      </div>
+
 
       {/* Content */}
       <div className="container px-4 mx-auto relative z-10">
