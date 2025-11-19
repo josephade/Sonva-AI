@@ -180,27 +180,35 @@ const Hero = () => {
                 },
               }}
             >
-              {[ 
-                { icon: Phone, label: "24/7 - Always Available" },
-                { icon: Calendar, label: "GDPR Compliant" },
-                { icon: BarChart3, label: "Quick Setup" },
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  className="space-y-2"
-                  variants={{
-                    hidden: { y: 30, opacity: 0 },
-                    visible: { y: 0, opacity: 1 },
-                  }}
-                >
-                  <div className="flex items-center justify-center">
-                    <stat.icon className="h-6 w-6 text-primary mb-2" />
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {stat.label}
-                  </div>
-                </motion.div>
-              ))}
+{[
+  { icon: Phone, label: "24/7 - Always Available" },
+  { icon: "gdpr.png", label: "GDPR Compliant" },
+  { icon: BarChart3, label: "Quick Setup" },
+].map((stat, i) => (
+  <motion.div
+    key={i}
+    className="space-y-2"
+    variants={{
+      hidden: { y: 30, opacity: 0 },
+      visible: { y: 0, opacity: 1 },
+    }}
+  >
+    <div className="flex items-center justify-center">
+      {typeof stat.icon === "string" ? (
+        <img
+          src={`/${stat.icon}`}
+          alt={stat.label}
+          className="h-9 w-9 object-contain brightness-110 drop-shadow-md"
+        />
+      ) : (
+        <stat.icon className="h-6 w-6 text-primary mb-2" />
+      )}
+    </div>
+    <div className="text-sm text-muted-foreground">{stat.label}</div>
+  </motion.div>
+))}
+
+
             </motion.div>
           </motion.div>
         </div>
