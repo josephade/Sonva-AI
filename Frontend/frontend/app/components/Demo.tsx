@@ -11,7 +11,7 @@ interface SubtitleEntry {
 
 const SUBTITLES: SubtitleEntry[] = [
   { t: 0, text: "Hey, Amy here from Sonva Dental. How may I help you?" },
-  { t: 3, text: "I'm calling because I have a really sore tooth and I'd like to book an appointment." },
+  { t: 3, text: "Hello Amy, I'm calling because I have a really sore tooth and I'd like to book an appointment." },
   { t: 9, text: "I'm sorry to hear you're in pain. Let's get you in as soon as possible." },
   { t: 12, text: "Do you have a preferred time or are you open to the earliest available slot?" },
   { t: 17, text: "Do you have a slot today?" },
@@ -19,18 +19,18 @@ const SUBTITLES: SubtitleEntry[] = [
   { t: 24, text: "That sounds perfect. Also, do you take medical cards?" },
   { t: 29, text: "We’re not accepting medical card patients, but we offer 20% off our emergency special." },
   { t: 37, text: "Yeah, that sounds good." },
-  { t: 40, text: "Great. Can I get your first name, last name, and date of birth?" },
-  { t: 47, text: "David James. DOB: 2nd February 2001." },
+  { t: 40, text: "Great. Can I get your first name, last name, and date of birth please?" },
+  { t: 47, text: "My name is David James. DOB: 2nd February 2001." },
   { t: 55, text: "Thanks David. Is this your best contact number?" },
   { t: 59, text: "Yeah, that’s correct." },
   { t: 61, text: "Your appointment is confirmed for today at 3:30pm." },
   { t: 63, text: "You'll receive a text with the details shortly." },
   { t: 67, text: "Can I change the appointment to tomorrow at 1?" },
   { t: 73, text: "Sure, I can move you to tomorrow at 1pm. Does that work better?" },
-  { t: 77, text: "Yeah, that’s better." },
+  { t: 77, text: "Yeah, that sounds much ." },
   { t: 80, text: "Your appointment is now confirmed for tomorrow at 1pm." },
-  { t: 86, text: "Where is the parking for the clinic?" },
-  { t: 91, text: "Parking is available in the underground garage. Follow the signs." },
+  { t: 86, text: "And where is the parking for the clinic?" },
+  { t: 91, text: "Parking is available in the underground garage. Just follow the signs." },
   { t: 97, text: "Perfect, thank you very much." }
 ];
 
