@@ -39,16 +39,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# Python
-__pycache__/
-*.py[cod]
-venv/
-.venv/
-ENV/
-env/
-
-# Google OAuth credentials
-credentials.json
-token.json
-

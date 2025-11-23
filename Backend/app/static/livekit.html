@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LiveKit Voice Test</title>
+  <script type="module">
+    import { connect } from "https://cdn.jsdelivr.net/npm/livekit-client@2.0.3/+esm";
+
+    async function joinRoom() {
+      const resp = await fetch("http://127.0.0.1:8000/token");
+      const data = await resp.json();
+
+      const room = await connect(data.url, data.token);
+      console.log("✅ Connected to room:", data.room);
+
+      const localTrack = await navigator.mediaDevices.getUserMedia({ audio: true });
+      await room.localParticipant.publishTrack(localTrack.getTracks()[0]);
+
+      room.on("trackSubscribed", (track, pub, participant) => {
+        const audioEl = document.createElement("audio");
+        audioEl.autoplay = true;
+        track.attach(audioEl);
+        document.body.appendChild(audioEl);
+      });
+    }
+
+    window.onload = joinRoom;
+  </script>
+</head>
+<body>
+  <h2>🎤 LiveKit Voice Test</h2>
+  <p>Check your console for connection status.</p>
+</body>
+</html>

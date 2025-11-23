@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+
+# macOS
+.DS_Store
+
+# Environment
+.env
+
+# Google OAuth credentials
+credentials.json
+token.json
+
