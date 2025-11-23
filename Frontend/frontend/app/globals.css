@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+/* ===================================
+   🌈 BASE THEME VARIABLES
+   =================================== */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* 🎨 Design Tokens */
+  --color-primary: hsl(200 95% 45%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(210 40% 96%);
+  --color-secondary-foreground: hsl(215 25% 15%);
+  --color-accent: hsl(280 85% 60%);
+  --color-accent-foreground: hsl(0 0% 100%);
+  --color-muted: hsl(210 40% 96%);
+  --color-muted-foreground: hsl(215 15% 50%);
+  --color-border: hsl(214 32% 91%);
+  --color-input: hsl(214 32% 91%);
+  --color-ring: hsl(200 95% 45%);
+  --radius: 0.75rem;
+  --gradient-primary: linear-gradient(135deg, hsl(200 95% 45%) 0%, hsl(220 90% 55%) 100%);
+  --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
+  --shadow-glow: 0 0 40px hsl(200 95% 45% / 0.15);
+}
+
+/* ===================================
+   🌙 DARK MODE (OPTIONAL)
+   Uncomment if you want system dark mode
+=================================== */
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --color-primary: hsl(200 95% 50%);
+    --gradient-hero: linear-gradient(180deg, hsl(215 30% 8%) 0%, hsl(215 25% 12%) 100%);
+  }
+}
+*/
+
+/* ===================================
+   🧱 GLOBAL BASE STYLES
+   =================================== */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: Arial, Helvetica, sans-serif;
+    @apply min-h-screen antialiased;
+  }
+
+  #root {
+    @apply max-w-[1280px] mx-auto p-8 text-center;
+  }
+}
+
+/* ===================================
+   ✨ COMPONENT UTILITIES (Cards, Docs)
+   =================================== */
+.card {
+  @apply p-8 bg-white rounded-xl shadow;
+}
+
+.read-the-docs {
+  @apply text-gray-500;
+}
+
+/* ===================================
+   🎞️ ANIMATIONS
+   =================================== */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+}
+
+@keyframes float-delayed {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(-5deg);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 5s ease-in-out infinite;
+}
+
+/* ===================================
+   🌀 LOGO SPIN DEMO (Optional)
+   =================================== */
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  transition: filter 300ms;
+  will-change: filter;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em hsl(var(--color-primary) / 0.7));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .logo-spin {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 700;
+}
+
+body {
+  font-family: var(--font-inter), sans-serif;
+}

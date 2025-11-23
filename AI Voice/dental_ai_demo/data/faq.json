@@ -1,0 +1,18 @@
+{
+  "hours": "Mon\u2013Fri 09:00\u201317:30; Sat 10:00\u201314:00; Sun Closed",
+  "location": "12 Dawson St, Dublin 2, D02",
+  "parking": "Street parking nearby; closest car park is Dawson Car Park (2-min walk).",
+  "insurance": "We accept VHI, Irish Life Health, and Laya, plus major private insurers.",
+  "services": [
+    "Check-ups & Cleaning",
+    "Fillings",
+    "Root Canal",
+    "Crowns & Bridges",
+    "Extractions",
+    "Whitening",
+    "Invisalign",
+    "Implants"
+  ],
+  "phone": "+353 1 234 5678",
+  "email": "reception@pearldental.ie"
+}
