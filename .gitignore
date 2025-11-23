@@ -44,10 +44,11 @@ next-env.d.ts
 __pycache__/
 *.py[cod]
 venv/
-
-# macOS
-.DS_Store
+.venv/
+ENV/
+env/
 
 # Google OAuth credentials
 credentials.json
 token.json
+
