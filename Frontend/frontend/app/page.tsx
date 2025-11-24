@@ -18,7 +18,7 @@ const Index = () => {
         {/* <VoiceDemo /> */}
         <Features />
         <Integrations />
-        <Dashboard />*
+        {/* <Dashboard /> */}
         <HowItWorks />
         <CTA /> 
         <FAQ />
