@@ -58,9 +58,14 @@ function FloatingParticles() {
 
   return (
     <points ref={points}>
+      
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" array={vertices} count={vertices.length / 3} itemSize={3} />
-      </bufferGeometry>
+  <bufferAttribute
+    attach="attributes-position"
+    args={[vertices, 3]}   // <-- FIX
+  />
+</bufferGeometry>
+
       <pointsMaterial color="#9b87f5" size={0.05} transparent opacity={0.6} />
     </points>
   );
