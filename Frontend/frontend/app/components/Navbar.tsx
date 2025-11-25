@@ -27,7 +27,12 @@ const Navbar = () => {
                 href={`#${item.toLowerCase()}`}
                 whileHover={{ scale: 1.1, y: -2 }}
                 transition={{ type: "spring", stiffness: 300 }}
-                className="text-sm font-medium hover:text-primary transition-colors"
+                className="
+                  text-sm font-medium
+                  hover:text-primary
+                  no-underline hover:no-underline active:no-underline focus:no-underline
+                  transition-colors
+                "
               >
                 {item}
               </motion.a>
@@ -40,7 +45,12 @@ const Navbar = () => {
               href="#login"
               whileHover={{ scale: 1.1, y: -2 }}
               transition={{ type: "spring", stiffness: 300 }}
-              className="hidden md:inline-block px-4 py-2 rounded-lg text-sm font-semibold text-primary border border-primary/40 hover:bg-primary/10 transition-all"
+              className="
+                hidden md:inline-block px-4 py-2 rounded-lg text-sm font-semibold text-primary
+                border border-primary/40 hover:bg-primary/10
+                no-underline hover:no-underline active:no-underline focus:no-underline
+                transition-all
+              "
             >
               Login
             </motion.a>
@@ -56,7 +66,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Menu */}
+        {/* Mobile Menu */}
         {isMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -66,19 +76,34 @@ const Navbar = () => {
           >
             <a
               href="#product"
-              className="block text-sm font-medium hover:text-primary transition-colors"
+              className="
+                block text-sm font-medium
+                hover:text-primary
+                no-underline hover:no-underline active:no-underline focus:no-underline
+                transition-colors
+              "
             >
               Product
             </a>
             <a
               href="#demo"
-              className="block text-sm font-medium hover:text-primary transition-colors"
+              className="
+                block text-sm font-medium
+                hover:text-primary
+                no-underline hover:no-underline active:no-underline focus:no-underline
+                transition-colors
+              "
             >
               Book Demo
             </a>
             <a
               href="#login"
-              className="block text-sm font-semibold text-primary border border-primary/40 px-4 py-2 rounded-lg hover:bg-primary/10 transition-all"
+              className="
+                block text-sm font-semibold text-primary border border-primary/40 px-4 py-2 rounded-lg
+                hover:bg-primary/10
+                no-underline hover:no-underline active:no-underline focus:no-underline
+                transition-all
+              "
             >
               Login
             </a>

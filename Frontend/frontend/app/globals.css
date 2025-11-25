@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ===================================
-   🌈 BASE THEME VARIABLES
+   🌈 BASE THEME VARIABLES (Tailwind v4 @theme)
    =================================== */
 :root {
   --background: #ffffff;
@@ -14,7 +14,6 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* 🎨 Design Tokens */
   --color-primary: hsl(200 95% 45%);
   --color-primary-foreground: hsl(0 0% 100%);
   --color-secondary: hsl(210 40% 96%);
@@ -26,97 +25,74 @@
   --color-border: hsl(214 32% 91%);
   --color-input: hsl(214 32% 91%);
   --color-ring: hsl(200 95% 45%);
+
   --radius: 0.75rem;
+
   --gradient-primary: linear-gradient(135deg, hsl(200 95% 45%) 0%, hsl(220 90% 55%) 100%);
   --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
+
   --shadow-glow: 0 0 40px hsl(200 95% 45% / 0.15);
 }
-
-/* ===================================
-   🌙 DARK MODE (OPTIONAL)
-   Uncomment if you want system dark mode
-=================================== */
-/*
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --color-primary: hsl(200 95% 50%);
-    --gradient-hero: linear-gradient(180deg, hsl(215 30% 8%) 0%, hsl(215 25% 12%) 100%);
-  }
-}
-*/
 
 /* ===================================
    🧱 GLOBAL BASE STYLES
    =================================== */
 @layer base {
-  * {
-    @apply border-border;
+  *, *::before, *::after {
+    border-color: var(--color-border);
   }
+
 
   body {
     background: var(--background);
     color: var(--foreground);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-inter), sans-serif;
     @apply min-h-screen antialiased;
   }
+}
 
-  #root {
-    @apply max-w-[1280px] mx-auto p-8 text-center;
+/* ===================================
+   🔥 FIX: Keep Tailwind's text sizes & prevent clipping
+   =================================== */
+
+/* Let Tailwind control sizes — DO NOT override font-size */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 700;
+  line-height: 1.15; /* keeps bold look without clipping */
+}
+
+/* Mobile-only wrapping fix */
+@media (max-width: 480px) {
+  h1, h2, h3, h4, h5, h6,
+  p, span, div {
+    white-space: normal !important;
+    word-break: break-word !important;
   }
 }
 
 /* ===================================
-   ✨ COMPONENT UTILITIES (Cards, Docs)
-   =================================== */
-.card {
-  @apply p-8 bg-white rounded-xl shadow;
-}
-
-.read-the-docs {
-  @apply text-gray-500;
-}
-
-/* ===================================
-   🎞️ ANIMATIONS
+   🎞️ FLOAT ANIMATIONS
    =================================== */
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(5deg);
-  }
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
 }
 
 @keyframes float-delayed {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-15px) rotate(-5deg);
-  }
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-15px) rotate(-5deg); }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-.animate-float-delayed {
-  animation: float-delayed 5s ease-in-out infinite;
-}
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-float-delayed { animation: float-delayed 5s ease-in-out infinite; }
 
 /* ===================================
-   🌀 LOGO SPIN DEMO (Optional)
+   🔄 LOGO SPIN
    =================================== */
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
 }
 
 .logo {
@@ -131,16 +107,58 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .logo-spin {
-    animation: logo-spin infinite 20s linear;
-  }
+  .logo-spin { animation: logo-spin infinite 20s linear; }
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-poppins), sans-serif;
-  font-weight: 700;
+/* Completely disable any underline rendering on all text */
+* {
+  text-decoration-thickness: 0 !important;
+  text-decoration: none !important;
+  -webkit-text-decoration-skip: none !important;
+  text-decoration-skip-ink: none !important;
 }
 
-body {
-  font-family: var(--font-inter), sans-serif;
+p {
+  text-decoration: none !important;
+  text-decoration-skip-ink: none !important;
 }
+
+.no-underline {
+  text-decoration: none !important;
+  text-decoration-skip-ink: none !important;
+  -webkit-text-decoration-skip: none !important;
+}
+
+
+/* Completely disable text selection everywhere */
+* {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* Remove all underlines from all elements globally, all layers */
+*, *::before, *::after {
+  text-decoration: none !important;
+  text-decoration-skip-ink: none !important;
+  -webkit-text-decoration-skip: none !important;
+}
+
+/* Override Tailwind preflight links */
+a, a:hover, a:active, a:focus, a * {
+  text-decoration: none !important;
+  text-decoration-skip-ink: none !important;
+  -webkit-text-decoration-skip: none !important;
+  outline: none !important;
+}
+
+/* Override Tailwind Typography plugin if active */
+.prose a,
+.prose a:hover,
+.prose a:active,
+.prose a:focus {
+  text-decoration: none !important;
+  text-decoration-skip-ink: none !important;
+  -webkit-text-decoration-skip: none !important;
+}
+

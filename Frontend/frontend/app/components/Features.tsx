@@ -8,9 +8,8 @@ import {
   Clock,
   Users,
   Sparkles,
-  ArrowRight,
   Zap,
-  LayoutDashboard
+  LayoutDashboard,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -67,33 +66,29 @@ const features = [
     icon: Users,
     title: "Practice\nIntegration",
     description:
-      "Connects with your existing dental software - DenGro, Dentrix, Open Dental, Eaglesoft and more.",
+      "Connects with your existing dental software – DenGro, Dentrix, Open Dental, Eaglesoft and more.",
     gradient: "from-indigo-500 via-violet-500 to-indigo-600",
     position: "left",
   },
 ];
 
-const Features = () => {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+export default function Features() {
+  const [active, setActive] = useState<number | null>(null);
 
   return (
-    <section className="relative pb-12 py-32 overflow-hidden bg-background">
-      {/* Gradient Background Animation */}
-      <div className="absolute inset-0 opacity-30">
+    <section className="relative py-32 overflow-hidden bg-background">
+      {/* Soft Animating Glow Background */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
         <div
           className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-accent/20 rounded-full blur-[120px] animate-pulse"
           style={{ animationDelay: "2s" }}
         />
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[150px] animate-pulse"
-          style={{ animationDelay: "4s" }}
-        />
       </div>
 
       <div className="container px-4 mx-auto relative z-10">
-        {/* Header Section */}
-        <div className="text-center max-w-5xl mx-auto mb-32">
+        {/* Header */}
+        <div className="text-center max-w-5xl mx-auto mb-28">
           <div className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-primary/20 backdrop-blur-sm mb-10">
             <Zap className="w-6 h-6 text-primary" />
             <span className="text-base font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -101,7 +96,7 @@ const Features = () => {
             </span>
           </div>
 
-          <h2 className="text-7xl md:text-8xl lg:text-9xl font-black mb-10 leading-[0.85] tracking-tight">
+          <h2 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[10rem] font-black leading-[1] tracking-tight mb-8">
             <span className="block text-foreground">Everything</span>
             <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
               Automated
@@ -109,133 +104,99 @@ const Features = () => {
           </h2>
 
           <p className="text-2xl md:text-3xl text-muted-foreground font-light max-w-3xl mx-auto">
-            Sonva handles your entire reception desk - instantly
+            Sonva handles your entire reception desk – instantly
           </p>
         </div>
 
-        {/* Features Layout */}
-        <div className="max-w-7xl mx-auto space-y-12">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className={`flex items-start gap-8 ${
-                feature.position === "right" ? "flex-row-reverse" : ""
-              }`}
-              style={{
-                animation: `fade-in 0.8s ease-out ${index * 0.15}s both`,
-              }}
-              onMouseEnter={() => setActiveIndex(index)}
-              onMouseLeave={() => setActiveIndex(null)}
-            >
-              {/* Icon */}
-              <div className="flex-shrink-0 relative group">
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-all duration-700`}
-                  style={{
-                    transform:
-                      activeIndex === index ? "scale(1.5)" : "scale(1)",
-                  }}
-                />
-                <div
-                  className={`relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br ${feature.gradient} p-1 transition-all duration-500`}
-                  style={{
-                    transform:
-                      activeIndex === index
-                        ? "scale(1.1) rotate(10deg)"
-                        : "scale(1) rotate(0deg)",
-                  }}
-                >
-                  <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
-                    <feature.icon
-                      className="h-10 w-10 md:h-14 md:w-14 text-foreground transition-transform duration-500"
-                      style={{
-                        transform:
-                          activeIndex === index ? "scale(1.2)" : "scale(1)",
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Title + Description */}
-              <div className="flex-1 min-w-0">
-                <div className="relative">
-                  {/* Connecting Line */}
+        {/* Feature Rows */}
+        <div className="max-w-7xl mx-auto space-y-16">
+          {features.map((f, i) => {
+            const isActive = active === i;
+            return (
+              <div
+                key={i}
+                onMouseEnter={() => setActive(i)}
+                onMouseLeave={() => setActive(null)}
+                className={`flex items-start gap-8 ${
+                  f.position === "right" ? "flex-row-reverse" : ""
+                } transition-all`}
+              >
+                {/* Icon Section */}
+                <div className="relative group flex-shrink-0">
                   <div
-                    className={`absolute ${
-                      feature.position === "right" ? "right-0" : "left-0"
-                    } top-1/2 -translate-y-1/2 w-0 h-[2px] bg-gradient-to-r ${
-                      feature.gradient
-                    } transition-all duration-700`}
-                    style={{
-                      width: activeIndex === index ? "60px" : "0px",
-                      opacity: activeIndex === index ? 1 : 0,
-                    }}
+                    className={`absolute inset-0 rounded-full blur-3xl bg-gradient-to-br ${f.gradient} transition-opacity duration-500 ${
+                      isActive ? "opacity-60 scale-110" : "opacity-0 scale-100"
+                    }`}
                   />
 
-                  {/* Text Stack */}
+                  <div
+                    className={`relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br ${f.gradient} p-1 transition-all duration-500 ${
+                      isActive ? "scale-[1.12] rotate-6" : "scale-100 rotate-0"
+                    }`}
+                  >
+                    <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
+                      <f.icon
+                        className={`h-10 w-10 md:h-14 md:w-14 text-foreground transition-transform duration-500 ${
+                          isActive ? "scale-110" : "scale-100"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Text Section */}
+                <div className="flex-1 min-w-0 relative">
+                  {/* Connecting line */}
+                  {/* <div
+                    className={`absolute top-1/2 -translate-y-1/2 h-[3px] bg-gradient-to-r ${f.gradient} transition-all duration-500 ${
+                      f.position === "right" ? "right-0" : "left-0"
+                    }`}
+                    style={{
+                      width: isActive ? "70px" : "0px",
+                      opacity: isActive ? 1 : 0,
+                    }}
+                  /> */}
+
                   <div
                     className={`flex flex-col ${
-                      feature.position === "right"
+                      f.position === "right"
                         ? "items-end text-right"
                         : "items-start text-left"
-                    } transition-all duration-500`}
-                    style={{
-                      transform:
-                        activeIndex === index
-                          ? "translateX(0)"
-                          : feature.position === "right"
-                          ? "translateX(-20px)"
-                          : "translateX(20px)",
-                      opacity: activeIndex === index ? 1 : 0.7,
-                    }}
+                    } transition-all duration-500 ${
+                      isActive ? "opacity-100 translate-x-0" : "opacity-80"
+                    }`}
                   >
                     <h3
-                      className={`text-4xl md:text-6xl lg:text-7xl font-black leading-[0.9] whitespace-pre-line mb-3 transition-all duration-500 ${
-                        activeIndex === index
-                          ? `bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent`
+                      className={`text-4xl md:text-6xl lg:text-7xl font-black leading-snug whitespace-pre-line mb-4 transition-all duration-500 ${
+                        isActive
+                          ? `bg-gradient-to-r ${f.gradient} bg-clip-text text-transparent`
                           : "text-foreground"
                       }`}
                     >
-                      {feature.title}
+                      {f.title}
                     </h3>
 
                     <div
-                      className={`overflow-hidden transition-all duration-500 w-full ${
-                        feature.position === "right" ? "text-right" : "text-left"
-                      }`}
+                      className="overflow-hidden transition-all duration-500"
                       style={{
-                        maxHeight: activeIndex === index ? "200px" : "0px",
-                        opacity: activeIndex === index ? 1 : 0,
+                        maxHeight: isActive ? "180px" : "0px",
+                        opacity: isActive ? 1 : 0,
                       }}
                     >
-                      <p
-                        className={`text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl ${
-                          feature.position === "right" ? "ml-auto" : "mr-auto"
-                        }`}
-                      >
-                        {feature.description}
+                      <p className="no-underline text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl ">
+                        {f.description}
                       </p>
-
-                      {/* <div
-                        className={`flex items-center gap-2 mt-4 text-primary font-semibold ${
-                          feature.position === "right" ? "justify-end" : "justify-start"
-                        }`}
-                      >
-                        <span className="text-sm">Explore feature</span>
-                        <ArrowRight className="w-4 h-4 animate-pulse" />
-                      </div> */}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* CTA Footer */}
+        {/* Subtext */}
         <div className="text-center mt-32">
-          <p className="text-muted-foreground text-lg mb-4">
+          <p className="text-muted-foreground text-lg mb-3">
             Hover over features to learn more
           </p>
           <div className="flex items-center justify-center gap-2">
@@ -248,6 +209,4 @@ const Features = () => {
       </div>
     </section>
   );
-};
-
-export default Features;
+}
