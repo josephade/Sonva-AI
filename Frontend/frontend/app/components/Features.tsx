@@ -138,7 +138,7 @@ export default function Features() {
                       <f.icon
                         className={`h-10 w-10 md:h-14 md:w-14 text-foreground transition-transform duration-500 ${
                           isActive ? "scale-110" : "scale-100"
-                        }`}
+                        }`}  
                       />
                     </div>
                   </div>

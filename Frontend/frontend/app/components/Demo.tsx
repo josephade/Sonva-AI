@@ -34,18 +34,19 @@ const SUBTITLES: SubtitleEntry[] = [
   { t: 97, text: "Perfect, thank you very much." }
 ];
 
+const BAR_COUNT = 24;
+const BAR_WIDTH = 20;
+const BAR_GAP = 12;
+
 interface DemoProps {
   isActive: boolean;
   onClose: () => void;
 }
 
-const BAR_COUNT = 24;
-const BAR_WIDTH = 20; 
-const BAR_GAP = 12;   
-
 const Demo = ({ isActive, onClose }: DemoProps) => {
-  const [step, setStep] = useState<number>(0);
-  const [subtitle, setSubtitle] = useState<string>("");
+  const [step, setStep] = useState(0);
+  const [ready, setReady] = useState(false);
+  const [subtitle, setSubtitle] = useState("");
 
   const [barValues, setBarValues] = useState<number[]>(
     Array(BAR_COUNT).fill(0)
@@ -54,34 +55,96 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
+  const animationRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (!isActive) return;
+  const subtitleInterval = useRef<number | null>(null);
 
-    setStep(0);
-    setSubtitle("");
+  const stopAll = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
 
-    const timers = [
-      setTimeout(() => setStep(1), 4000),
-      setTimeout(() => setStep(2), 7500),
-    ];
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
 
-    return () => timers.forEach((t) => clearTimeout(t));
-  }, [isActive]);
+    if (subtitleInterval.current !== null) {
+      clearInterval(subtitleInterval.current);
+      subtitleInterval.current = null;
+    }
 
-  useEffect(() => {
-    if (step !== 2) return;
+    analyserRef.current = null;
+    dataArrayRef.current = null;
+  };
 
-    const delay = setTimeout(() => {
-      const audio = new Audio("/demo-call.mp3");
+  const safeGetByteFrequencyData = (analyser: any, array: Uint8Array) => {
+  analyser.getByteFrequencyData(array);
+};
+
+//  Bars Animation
+  const animateBars = () => {
+  if (!analyserRef.current || !dataArrayRef.current) return;
+
+  const analyser = analyserRef.current;
+  const data = dataArrayRef.current;
+
+  safeGetByteFrequencyData(analyser, data);
+
+  const mid = Math.floor(BAR_COUNT / 2);
+  const mappedBars = Array(BAR_COUNT).fill(0);
+
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const mirroredIndex = Math.abs(i - mid);
+    mappedBars[i] = data[mirroredIndex] / 255;
+  }
+
+  setBarValues(mappedBars);
+  animationRef.current = requestAnimationFrame(animateBars);
+};
+
+
+
+
+  // -----------------------
+  // Subtitles
+  // -----------------------
+  const startSubtitles = () => {
+    if (!audioRef.current) return;
+
+    subtitleInterval.current = window.setInterval(() => {
+      const t = audioRef.current!.currentTime;
+      let text = "";
+
+      for (let s of SUBTITLES) {
+        if (t >= s.t) text = s.text;
+      }
+
+      setSubtitle(text);
+    }, 120);
+  };
+
+  // -----------------------
+  // Start Audio
+  // -----------------------
+  const startAudio = async () => {
+    try {
+      const audio = document.getElementById("demo-audio") as HTMLAudioElement;
       audioRef.current = audio;
 
-      const ctx = new AudioContext();
+      const AudioCtx =
+        (window.AudioContext || (window as any).webkitAudioContext);
+
+      const ctx = new AudioCtx();
+      await ctx.resume();
+
       const src = ctx.createMediaElementSource(audio);
 
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 64;
+
       analyserRef.current = analyser;
 
       const bufferLength = analyser.frequencyBinCount;
@@ -90,170 +153,147 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
       src.connect(analyser);
       analyser.connect(ctx.destination);
 
-      audio.play();
-      setStep(3); 
-
-      audio.onended = () => {
-        stopEverything();
-        onClose();
-      };
-
+      await audio.play();
       animateBars();
       startSubtitles();
-    }, 1700);
 
-    return () => clearTimeout(delay);
-  }, [step, onClose]);
-
-  const safeGetByteFrequencyData = (analyser: AnalyserNode, array: Uint8Array) => {
-    (analyser as any).getByteFrequencyData(array);
+      audio.onended = () => {
+        stopAll();
+        onClose();
+      };
+    } catch (e) {
+      console.log("Audio autoplay blocked:", e);
+    }
   };
 
-  const animateBars = () => {
-    if (!analyserRef.current || !dataArrayRef.current) return;
-
-    const analyser = analyserRef.current;
-    const data = dataArrayRef.current;
-
-    safeGetByteFrequencyData(analyser, data);
-
-    const mid = Math.floor(BAR_COUNT / 2);
-    const mappedBars = Array(BAR_COUNT).fill(0);
-
-    for (let i = 0; i < BAR_COUNT; i++) {
-      const mirroredIndex = Math.abs(i - mid);
-      const rawValue = data[mirroredIndex] / 255;
-      mappedBars[i] = rawValue;
+  // -----------------------
+  // Step Flow
+  // -----------------------
+  useEffect(() => {
+    if (!isActive) {
+      stopAll();
+      return;
     }
 
-    setBarValues(mappedBars);
-    animationFrameRef.current = requestAnimationFrame(animateBars);
-  };
+    setStep(0);
+    setReady(false);
+    setSubtitle("");
 
-  const startSubtitles = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    return () => stopAll();
+  }, [isActive]);
 
-    let lastSubtitle = "";
+  useEffect(() => {
+    if (!isActive || !ready) return;
 
-    const interval = setInterval(() => {
-      const current = audio.currentTime;
-      let text = "";
+    const t1 = setTimeout(() => setStep(1), 800);
+    const t2 = setTimeout(() => setStep(2), 3500);
+    const t3 = setTimeout(() => {
+      setStep(3);
+      startAudio();
+    }, 5500);
 
-      for (let s of SUBTITLES) {
-        if (current >= s.t) text = s.text;
-      }
-
-      if (text !== lastSubtitle) {
-        lastSubtitle = text;
-        setSubtitle(text);
-      }
-    }, 120);
-
-    audio.onended = () => clearInterval(interval);
-  };
-
-  const stopEverything = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current = null;
-    }
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    analyserRef.current = null;
-    dataArrayRef.current = null;
-  };
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [ready, isActive]);
 
   const handleSkip = () => {
-    stopEverything();
-    setStep(0);
+    stopAll();
     onClose();
   };
 
-
   return (
-    <AnimatePresence>
-      {isActive && (
-        <motion.div
-          className="fixed inset-0 z-[999] flex items-center justify-center text-white"
-          style={{ background: "#06112B" }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          {/* Skip  Button */}
-          <button
-            onClick={handleSkip}
-            className="absolute top-6 right-6 px-4 py-2 rounded-md bg-white/10 border border-white/20 hover:bg-white/20"
+    <>
+      {/* Mobile-safe audio element */}
+      <audio id="demo-audio" src="/demo-call.mp3" preload="auto" />
+
+      <AnimatePresence>
+        {isActive && (
+          <motion.div
+            className="fixed inset-0 z-[999] flex items-center justify-center text-white"
+            style={{ background: "#06112B" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            Skip
-          </button>
+            <button
+              onClick={handleSkip}
+              className="absolute top-6 right-6 px-4 py-2 rounded-md bg-white/10 border border-white/20 hover:bg-white/20"
+            >
+              Skip
+            </button>
 
-          {/* Step 0 */}
-          {step === 0 && (
-            <motion.div className="text-center space-y-4">
-              <p className="text-3xl font-semibold">Starting demo...</p>
-              <p className="text-lg opacity-70">Turn your volume up.</p>
-            </motion.div>
-          )}
+            {/* Step 0 — Mandatory for mobile */}
+            {step === 0 && !ready && (
+              <div className="text-center space-y-6">
+                <p className="text-3xl font-semibold">Ready to start?</p>
 
-          {/* Step 1 */}
-          {step === 1 && (
-            <motion.div className="text-center space-y-4">
-              <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
-              <p className="text-xl opacity-70">Front desk is busy…</p>
-            </motion.div>
-          )}
-
-          {/* Step 2 */}
-          {step === 2 && (
-            <motion.div className="text-center space-y-4 mt-10">
-              <motion.p
-                className="text-2xl font-semibold"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                Sonva picks up, 24/7…
-              </motion.p>
-            </motion.div>
-          )}
-
-          {/* Step 3 - Audio starts */}
-          {step === 3 && (
-            <>
-              <div className="absolute bottom-[120px] left-0 right-0 mx-auto flex justify-center"
-                   style={{ gap: `${BAR_GAP}px` }}>
-                {barValues.map((v, i) => (
-                  <div
-                    key={i}
-                    className="rounded-md bg-gradient-to-b from-[#0A214A] to-[#07152E]"
-                    style={{
-                      width: `${BAR_WIDTH}px`,
-                      height: `${Math.max(10, v * 260)}px`,
-                      opacity: 0.85,
-                      filter: "blur(1px)",
-                      transition: "height 60ms linear",
-                    }}
-                  />
-                ))}
+                <button
+                  onClick={() => {
+                    const unlock = new Audio();
+                    unlock.play().catch(() => {});
+                    setReady(true);
+                  }}
+                  className="px-6 py-3 bg-white text-black font-semibold rounded-md"
+                >
+                  Start Demo
+                </button>
               </div>
+            )}
 
-              {/* SUBTITLE */}
-              {subtitle && (
+            {/* Step 1 */}
+            {step === 1 && (
+              <div className="text-center space-y-4">
+                <p className="text-3xl font-semibold">Starting demo…</p>
+                <p className="text-lg opacity-70">Turn your volume up.</p>
+              </div>
+            )}
+
+            {/* Step 2 */}
+            {step === 2 && (
+              <div className="text-center space-y-4">
+                <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+                <p className="text-xl opacity-70">Front desk is busy…</p>
+              </div>
+            )}
+
+            {/* Step 3 - Audio Playing */}
+            {step === 3 && (
+              <>
+                {/* Audio Bars */}
+                <div
+                  className="absolute bottom-[120px] left-0 right-0 mx-auto flex justify-center"
+                  style={{ gap: `${BAR_GAP}px` }}
+                >
+                  {barValues.map((v, i) => (
+                    <div
+                      key={i}
+                      className="rounded-md bg-gradient-to-b from-[#0A214A] to-[#07152E]"
+                      style={{
+                        width: `${BAR_WIDTH}px`,
+                        height: `${Math.max(10, v * 260)}px`,
+                        opacity: 0.85,
+                        filter: "blur(1px)",
+                        transition: "height 60ms linear",
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Subtitle */}
                 <div className="absolute bottom-10 w-full text-center px-4">
                   <p className="text-white text-lg font-semibold drop-shadow-lg">
                     {subtitle}
                   </p>
                 </div>
-              )}
-            </>
-          )}
-        </motion.div>
-      )}
-    </AnimatePresence>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
