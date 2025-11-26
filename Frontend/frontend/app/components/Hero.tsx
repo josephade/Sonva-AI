@@ -123,43 +123,42 @@ const Hero = () => {
               </span>
             </motion.h1>
 
-            {/* Subheadline */}
-            <motion.p
-              className="text-[1.25rem] md:text-[1.35rem] text-muted-foreground 
-              max-w-[52rem] mx-auto leading-snug tracking-tight text-balance"
-              initial={isMobile ? {} : { y: 30, opacity: 0 }}
-              animate={isMobile ? {} : { y: 0, opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              Let Sonva handle appointment scheduling, patient inquiries, and cancellations — built for
-              <span className="font-semibold text-primary"> Irish </span>
-              and
-              <span className="font-semibold text-accent"> UK </span>
-              clinics.
-            </motion.p>
+{/* Subheadline */}
+<motion.p
+  className="text-[1.25rem] md:text-[1.35rem] text-muted-foreground max-w-[52rem] mx-auto leading-snug text-center tracking-tight text-balance"
+  initial={isMobile ? {} : { y: 30, opacity: 0 }}
+  animate={isMobile ? {} : { y: 0, opacity: 1 }}
+  transition={{ duration: 0.8, delay: 0.2 }}
+>
+  Let Sonva handle appointment scheduling, patient inquiries, and cancellations — built for{" "}
+  <span className="font-semibold text-primary">Irish</span> and{" "}
+  <span className="font-semibold text-accent">UK</span> clinics.
+</motion.p>
 
-            {/* CTA */}
-            <motion.div
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6"
-              initial={isMobile ? {} : { y: 20, opacity: 0 }}
-              animate={isMobile ? {} : { y: 0, opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            >
-              <button
-                onClick={() => setShowDemo(true)}
-                className="group inline-flex items-center gap-3 h-14 pl-4 pr-8 rounded-full 
-                text-base font-semibold bg-white border border-primary/30 text-primary
-                transition-all duration-300 hover:bg-primary hover:text-white shadow-sm"
-              >
-                <div
-                  className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-white
-                  group-hover:bg-white group-hover:text-primary transition-all"
-                >
-                  <Play className="w-4 h-4" />
-                </div>
-                <span className="font-semibold">See it in Action</span>
-              </button>
-            </motion.div>
+
+            {/* CTA Button */}
+<motion.div
+  className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6"
+  initial={isMobile ? {} : { y: 20, opacity: 0 }}
+  animate={isMobile ? { opacity: 1 } : { y: 0, opacity: 1 }}
+  transition={{ duration: 0.8, delay: 0.4 }}
+>
+  <button
+    onClick={() => setShowDemo(true)}
+    className="group inline-flex items-center gap-3 h-14 pl-4 pr-8 rounded-full 
+    text-base font-semibold bg-white border border-primary/30 text-primary
+    transition-all duration-300 hover:bg-primary hover:text-white shadow-sm w-full sm:w-auto"
+  >
+    <div
+      className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-white
+      group-hover:bg-white group-hover:text-primary transition-all"
+    >
+      <Play className="w-4 h-4" />
+    </div>
+    <span className="font-semibold">See it in Action</span>
+  </button>
+</motion.div>
+
 
             {/* Stats (static on mobile) */}
             <div className="grid grid-cols-3 gap-8 pt-6 max-w-2xl mx-auto">

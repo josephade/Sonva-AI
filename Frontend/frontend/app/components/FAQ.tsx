@@ -105,22 +105,23 @@ const FAQ = () => {
       {/* Header */}
       <div className="text-center mb-16 px-4 relative z-10">
         <motion.h2
-          initial={isMobile ? false : { opacity: 0, y: 30 }}
-          whileInView={isMobile ? {} : { opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent"
-        >
-          Frequently Asked Questions
-        </motion.h2>
+  initial={isMobile ? false : { opacity: 0, y: 30 }}
+  whileInView={isMobile ? {} : { opacity: 1, y: 0 }}
+  transition={{ duration: 1 }}
+  className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent"
+>
+  Frequently Asked Questions
+</motion.h2>
 
-        <motion.p
-          initial={isMobile ? false : { opacity: 0, y: 20 }}
-          whileInView={isMobile ? {} : { opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 1 }}
-          className="text-muted-foreground text-lg max-w-2xl mx-auto"
-        >
-          Everything you need to know about Sonva AI, from setup to security.
-        </motion.p>
+<motion.p
+  initial={isMobile ? false : { opacity: 0, y: 20 }}
+  whileInView={isMobile ? {} : { opacity: 1, y: 0 }}
+  transition={{ delay: 0.3, duration: 1 }}
+  className="text-muted-foreground text-lg max-w-2xl mx-auto"
+>
+  Everything you need to know about Sonva AI, from setup to security.
+</motion.p>
+
       </div>
 
       {/* FAQ List */}
