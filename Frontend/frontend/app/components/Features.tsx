@@ -187,7 +187,7 @@ export default function Features() {
                   >
                     <h3
                       className={`
-                        text-4xl md:text-6xl lg:text-7xl font-black leading-snug whitespace-pre-line mb-4
+                        text-4xl md:text-4xl lg:text-7xl font-black leading-snug whitespace-pre-line mb-4
                         transition-all duration-500 
                         ${isActiveRow && !isMobile ? `bg-gradient-to-r ${f.gradient} bg-clip-text text-transparent` : "text-foreground"}
                       `}
