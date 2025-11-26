@@ -4,6 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
+// Detect mobile
+const isMobileDevice =
+  typeof window !== "undefined" && window.innerWidth < 768;
+
 interface SubtitleEntry {
   t: number;
   text: string;
@@ -34,46 +38,38 @@ const SUBTITLES: SubtitleEntry[] = [
   { t: 97, text: "Perfect, thank you very much." }
 ];
 
-const BAR_COUNT = 24;
-const BAR_WIDTH = 20;
-const BAR_GAP = 12;
+const BAR_COUNT = isMobileDevice ? 12 : 24;
+const BAR_WIDTH = isMobileDevice ? 12 : 20;
+const BAR_GAP = isMobileDevice ? 6 : 12;
 
 interface DemoProps {
   isActive: boolean;
   onClose: () => void;
 }
 
+// bypass TS incorrect signature
+function safeGetFreq(analyser: AnalyserNode, arr: Uint8Array) {
+  (analyser as any).getByteFrequencyData(arr);
+}
+
 const Demo = ({ isActive, onClose }: DemoProps) => {
   const [step, setStep] = useState(0);
   const [subtitle, setSubtitle] = useState("");
 
-  const [barValues, setBarValues] = useState<number[]>(
-    Array(BAR_COUNT).fill(0)
-  );
+  const [barValues, setBarValues] = useState<number[]>(Array(BAR_COUNT).fill(0));
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
   const animationRef = useRef<number | null>(null);
   const subtitleInterval = useRef<number | null>(null);
 
-  // Prevent multiple WebAudio connections
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-
-  // Safe wrapper for analyser
-  const safeGetByteFrequencyData = (analyser: any, array: Uint8Array) => {
-    analyser.getByteFrequencyData(array);
-  };
-
-  // -----------------------
-  // Clean-up
-  // -----------------------
+  // Stop EVERYTHING
   const stopAll = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
+    audioRef.current?.pause();
+    if (audioRef.current) audioRef.current.currentTime = 0;
 
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
@@ -84,72 +80,70 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
       clearInterval(subtitleInterval.current);
       subtitleInterval.current = null;
     }
-
-    analyserRef.current = null;
-    dataArrayRef.current = null;
   };
 
-  // -----------------------
-  // Bars Animation
-  // -----------------------
+  // Bars animation
+  let frameSkip = 0;
   const animateBars = () => {
     if (!analyserRef.current || !dataArrayRef.current) return;
 
     const analyser = analyserRef.current;
-    const data = dataArrayRef.current;
+    const arr = dataArrayRef.current;
 
-    safeGetByteFrequencyData(analyser, data);
+    safeGetFreq(analyser, arr);
 
-    const mid = Math.floor(BAR_COUNT / 2);
-    const mappedBars = Array(BAR_COUNT).fill(0);
-
-    for (let i = 0; i < BAR_COUNT; i++) {
-      const mirroredIndex = Math.abs(i - mid);
-      mappedBars[i] = data[mirroredIndex] / 255;
+    // throttle on mobile
+    if (isMobileDevice) {
+      frameSkip++;
+      if (frameSkip % 2 !== 0) {
+        animationRef.current = requestAnimationFrame(animateBars);
+        return;
+      }
     }
 
-    setBarValues(mappedBars);
+    const mid = Math.floor(BAR_COUNT / 2);
+    const mapped = Array(BAR_COUNT).fill(0);
+
+    for (let i = 0; i < BAR_COUNT; i++) {
+      const idx = Math.abs(i - mid);
+      mapped[i] = arr[idx] / 255;
+    }
+
+    setBarValues(mapped);
     animationRef.current = requestAnimationFrame(animateBars);
   };
 
-  // -----------------------
   // Subtitles
-  // -----------------------
   const startSubtitles = () => {
     if (!audioRef.current) return;
+
+    const speed = isMobileDevice ? 200 : 120;
 
     subtitleInterval.current = window.setInterval(() => {
       const t = audioRef.current!.currentTime;
       let text = "";
 
-      for (let s of SUBTITLES) {
-        if (t >= s.t) text = s.text;
-      }
+      for (let s of SUBTITLES) if (t >= s.t) text = s.text;
 
       setSubtitle(text);
-    }, 120);
+    }, speed);
   };
 
-  // -----------------------
-  // Start Audio (Chrome iOS Safe)
-  // -----------------------
+  // START AUDIO ONLY WHEN STEP === 3
   const startAudio = async () => {
     try {
-      const audio = document.getElementById("demo-audio") as HTMLAudioElement;
-      audioRef.current = audio;
+      const audio = audioRef.current!;
+      const ACtx =
+        window.AudioContext || (window as any).webkitAudioContext;
 
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      let ctx =
-        (analyserRef.current?.context as AudioContext) ?? new AudioCtx();
-
+      const ctx = new ACtx();
       await ctx.resume();
 
-      // Create WebAudio graph once
       if (!sourceRef.current) {
         sourceRef.current = ctx.createMediaElementSource(audio);
-
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 64;
+
+        analyser.fftSize = isMobileDevice ? 32 : 64;
 
         analyserRef.current = analyser;
 
@@ -160,7 +154,6 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
         analyser.connect(ctx.destination);
       }
 
-      // Chrome iOS: must start muted → play → unmute
       audio.muted = true;
       await audio.play();
       audio.muted = false;
@@ -172,28 +165,22 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
         stopAll();
         onClose();
       };
-    } catch (e) {
-      console.warn("Audio autoplay blocked:", e);
+    } catch (err) {
+      console.warn("Audio blocked:", err);
     }
   };
 
-  // -----------------------
-  // Step Flow (Autoplay Immediately)
-  // -----------------------
+  // Handle steps
   useEffect(() => {
     if (!isActive) {
       stopAll();
       return;
     }
 
-    setSubtitle("");
-
-    // Start audio immediately inside activation → Chrome iOS allows it
-    startAudio();
-
     setStep(1);
-    const t2 = setTimeout(() => setStep(2), 1000);
-    const t3 = setTimeout(() => setStep(3), 2000);
+
+    const t2 = setTimeout(() => setStep(2), 700);
+    const t3 = setTimeout(() => setStep(3), 1600);
 
     return () => {
       stopAll();
@@ -202,15 +189,21 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
     };
   }, [isActive]);
 
+  // Start audio *exactly* at Step 3
+  useEffect(() => {
+    if (step === 3) {
+      startAudio();
+    }
+  }, [step]);
   return (
     <>
-      {/* Chrome iOS requires muted + playsInline */}
       <audio
         id="demo-audio"
         src="/demo-call.mp3"
         preload="auto"
         muted
         playsInline
+        ref={audioRef}
       />
 
       <AnimatePresence>
@@ -222,6 +215,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
+            {/* Skip button */}
             <button
               onClick={onClose}
               className="absolute top-6 right-6 px-4 py-2 rounded-md bg-white/10 border border-white/20 hover:bg-white/20"
@@ -229,7 +223,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
               Skip
             </button>
 
-            {/* Step 1 */}
+            {/* STEP 1 — Starting Demo */}
             {step === 1 && (
               <div className="text-center space-y-4">
                 <p className="text-3xl font-semibold">Starting demo…</p>
@@ -237,7 +231,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
               </div>
             )}
 
-            {/* Step 2 */}
+            {/* STEP 2 — Front desk is busy */}
             {step === 2 && (
               <div className="text-center space-y-4">
                 <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
@@ -245,24 +239,29 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
               </div>
             )}
 
-            {/* Step 3 */}
+            {/* STEP 3 — Audio + Bars + Subtitles */}
             {step === 3 && (
               <>
                 {/* Bars */}
                 <div
                   className="absolute bottom-[120px] left-0 right-0 mx-auto flex justify-center"
-                  style={{ gap: `${BAR_GAP}px` }}
+                  style={{
+                    gap: `${BAR_GAP}px`,
+                    transform: "translateZ(0)", // GPU acceleration
+                  }}
                 >
                   {barValues.map((v, i) => (
                     <div
                       key={i}
-                      className="rounded-md bg-gradient-to-b from-[#0A214A] to-[#07152E]"
+                      className="rounded-md"
                       style={{
                         width: `${BAR_WIDTH}px`,
                         height: `${Math.max(10, v * 260)}px`,
-                        opacity: 0.85,
-                        filter: "blur(1px)",
-                        transition: "height 60ms linear"
+                        background: isMobileDevice
+                          ? "#0A214A"
+                          : "linear-gradient(to bottom, #0A214A, #07152E)",
+                        opacity: 0.9,
+                        transition: "height 80ms linear",
                       }}
                     />
                   ))}
