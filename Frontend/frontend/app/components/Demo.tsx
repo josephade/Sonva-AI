@@ -58,10 +58,10 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
   const animationRef = useRef<number | null>(null);
   const subtitleInterval = useRef<number | null>(null);
 
-  // 🔥 FIX to prevent "already connected" error:
+  // Prevent multiple WebAudio connections
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
-  // TypeScript-safe wrapper for audio frequency
+  // Safe wrapper for analyser
   const safeGetByteFrequencyData = (analyser: any, array: Uint8Array) => {
     analyser.getByteFrequencyData(array);
   };
@@ -85,8 +85,6 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
       subtitleInterval.current = null;
     }
 
-    // DO NOT clear sourceRef — must persist
-    // analyser and data can be reset safely
     analyserRef.current = null;
     dataArrayRef.current = null;
   };
@@ -133,7 +131,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
   };
 
   // -----------------------
-  // Start Audio (AUTOPLAY)
+  // Start Audio (Chrome iOS Safe)
   // -----------------------
   const startAudio = async () => {
     try {
@@ -146,9 +144,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
 
       await ctx.resume();
 
-      // ------------ IMPORTANT ------------
-      // Only create the MediaElementSourceNode ONCE
-      // -----------------------------------
+      // Create WebAudio graph once
       if (!sourceRef.current) {
         sourceRef.current = ctx.createMediaElementSource(audio);
 
@@ -164,7 +160,10 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
         analyser.connect(ctx.destination);
       }
 
+      // Chrome iOS: must start muted → play → unmute
+      audio.muted = true;
       await audio.play();
+      audio.muted = false;
 
       animateBars();
       startSubtitles();
@@ -174,12 +173,12 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
         onClose();
       };
     } catch (e) {
-      console.warn("Audio autoplay blocked or source reused:", e);
+      console.warn("Audio autoplay blocked:", e);
     }
   };
 
   // -----------------------
-  // Step Flow
+  // Step Flow (Autoplay Immediately)
   // -----------------------
   useEffect(() => {
     if (!isActive) {
@@ -189,16 +188,15 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
 
     setSubtitle("");
 
-    const t1 = setTimeout(() => setStep(1), 500);
-    const t2 = setTimeout(() => setStep(2), 1500);
-    const t3 = setTimeout(() => {
-      setStep(3);
-      startAudio();
-    }, 2500);
+    // Start audio immediately inside activation → Chrome iOS allows it
+    startAudio();
+
+    setStep(1);
+    const t2 = setTimeout(() => setStep(2), 1000);
+    const t3 = setTimeout(() => setStep(3), 2000);
 
     return () => {
       stopAll();
-      clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
     };
@@ -206,7 +204,14 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
 
   return (
     <>
-      <audio id="demo-audio" src="/demo-call.mp3" preload="auto" />
+      {/* Chrome iOS requires muted + playsInline */}
+      <audio
+        id="demo-audio"
+        src="/demo-call.mp3"
+        preload="auto"
+        muted
+        playsInline
+      />
 
       <AnimatePresence>
         {isActive && (
@@ -240,7 +245,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
               </div>
             )}
 
-            {/* Step 3 - Audio Playing */}
+            {/* Step 3 */}
             {step === 3 && (
               <>
                 {/* Bars */}
