@@ -78,7 +78,7 @@ export default function Features() {
   const isMobile = useIsMobile();
 
   return (
-    <section className="relative py-32 overflow-hidden bg-background">
+    <section className="relative py-16   overflow-hidden bg-background">
 
       {/* REMOVE BLURRED GLOWS ON MOBILE */}
       {!isMobile && (
@@ -127,7 +127,7 @@ export default function Features() {
         </div>
 
         {/* FEATURES LIST */}
-        <div className="max-w-7xl mx-auto space-y-16">
+        <div className="max-w-7xl mx-auto space-y-10 md:space-y-16">
           {features.map((f, i) => {
             const isActiveRow = active === i;
 
@@ -216,8 +216,8 @@ export default function Features() {
         </div>
 
         {/* FOOTER */}
-        <div className="text-center mt-32">
-          <p className="text-muted-foreground text-lg mb-3">
+        <div className="text-center mt-32 hidden lg:block">
+          <p className="text-muted-foreground text-lg mb-3 lg:block">
             Hover over features to learn more
           </p>
           <div className="flex items-center justify-center gap-2">

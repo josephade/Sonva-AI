@@ -8,7 +8,7 @@ const faqs = [
   {
     question: "What is Sonva AI?",
     answer:
-      "Sonva AI is an intelligent dental receptionist that answers calls, schedules appointments, and handles patient communication 24/7 — seamlessly integrated with your practice workflow.",
+      "Sonva AI is an intelligent dental receptionist that answers calls, schedules appointments, and handles patient communication 24/7 - seamlessly integrated with your practice workflow.",
   },
   {
     question: "How long does setup take?",
@@ -40,6 +40,7 @@ const FloatingParticles = () => {
       {particles.map((_, i) => (
         <motion.div
           key={i}
+          viewport={{ once: true }}
           className="absolute w-3 h-3 rounded-full"
           style={{
             background:
@@ -84,8 +85,8 @@ export default function FAQ() {
         relative 
         bg-gradient-to-b from-background via-background/80 to-background
         overflow-hidden
-        pt-20 pb-28         /* mobile spacing fix */
-        md:py-32            /* desktop unchanged */
+        pt-8 pb-28         /* mobile spacing fix */
+        md:py-8            /* desktop unchanged */
       "
     >
       <FloatingParticles />
@@ -96,6 +97,7 @@ export default function FAQ() {
           initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
+          viewport={{ once: true }}
           className="
             text-4xl sm:text-5xl md:text-6xl 
             font-bold mb-6 
@@ -192,7 +194,7 @@ export default function FAQ() {
             Still have questions?
           </span>
           <span className="text-muted-foreground">
-            Contact us anytime — we’re here to help.
+            Contact us anytime - we’re here to help.
           </span>
         </div>
       </div>

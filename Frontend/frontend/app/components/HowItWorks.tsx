@@ -40,12 +40,7 @@ function FloatingOrbs() {
   return (
     <group ref={group}>
       {[...Array(12)].map((_, i) => (
-        <Float
-          key={i}
-          speed={1.5}
-          rotationIntensity={0.5}
-          floatIntensity={0.8}
-        >
+        <Float key={i} speed={1.5} rotationIntensity={0.5} floatIntensity={0.8}>
           <Sphere
             args={[0.06, 16, 16]}
             position={[
@@ -76,7 +71,7 @@ function FloatingOrbs() {
 
 const HowItWorks = () => {
   return (
-    <section className="relative py-40 overflow-hidden">
+    <section className="relative py-16 overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Canvas camera={{ position: [0, 0, 8], fov: 70 }}>
           <ambientLight intensity={0.5} />
@@ -95,6 +90,7 @@ const HowItWorks = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
+          viewport={{ once: true }}
           className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent"
         >
           How It Works
@@ -104,6 +100,7 @@ const HowItWorks = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 1 }}
           className="text-xl text-muted-foreground max-w-2xl mx-auto"
+          viewport={{ once: true }}
         >
           Three immersive steps to transform your dental practice’s communication.
         </motion.p>
@@ -112,13 +109,7 @@ const HowItWorks = () => {
       {/* Steps Grid */}
       <div className="relative z-10 container mx-auto max-w-6xl px-4">
         <div className="flex flex-col md:gap-24 gap-12 relative">
-          {/* Connecting line glow */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 2 }}
-            className="absolute left-8 top-0 bottom-0 w-[3px] bg-gradient-to-b from-primary via-accent to-transparent blur-sm opacity-40 md:left-1/2 md:-translate-x-1/2"
-          />
+          {/* Removed the vertical connecting line */}
 
           {steps.map((step, index) => (
             <motion.div
@@ -126,9 +117,10 @@ const HowItWorks = () => {
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.2, duration: 1 }}
-              className={`relative flex flex-col md:flex-row items-center md:even:flex-row-reverse gap-10`}
+              viewport={{ once: true }}
+              className="relative flex flex-col md:flex-row items-center md:even:flex-row-reverse gap-10"
             >
-              {/* Orb with glow */}
+              {/* Orb */}
               <motion.div
                 className="relative z-10"
                 whileHover={{ scale: 1.1 }}
@@ -146,10 +138,11 @@ const HowItWorks = () => {
                 />
               </motion.div>
 
-              {/* Step Card */}
+              {/* Card */}
               <motion.div
                 className="flex-1 bg-gradient-to-br from-card/60 to-card/30 backdrop-blur-xl border border-border/50 p-8 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.2)] group hover:border-primary/50 hover:shadow-[0_0_60px_rgba(0,0,0,0.3)] transition-all duration-500"
                 whileHover={{ y: -6 }}
+                viewport={{ once: true }}
               >
                 <h3 className="text-2xl font-bold mb-4 group-hover:text-primary transition-colors">
                   {step.title}
@@ -168,9 +161,10 @@ const HowItWorks = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="text-center mt-24"
+          viewport={{ once: true }}
         >
           <div className="inline-flex items-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 backdrop-blur-sm">
-            <span className="text-muted-foreground">• Minimal setup required</span>
+            <span className="text-muted-foreground">Minimal setup required</span>
           </div>
         </motion.div>
       </div>

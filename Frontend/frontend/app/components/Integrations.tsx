@@ -138,7 +138,7 @@ const Integrations = () => {
       </div>
 
       {/* Mid-section CTA */}
-      <div className="relative z-20 flex justify-center mb-16 -mt-12">
+      <div className="relative z-20 flex justify-center mb-16 -mt-19">
         <BookNowButton href="#book-demo" />
       </div>
 
@@ -185,6 +185,7 @@ const Integrations = () => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1 }}
+                viewport={{ once: true }}
               >
                 <h3 className="text-3xl md:text-4xl font-bold">
                   Everything Connected,

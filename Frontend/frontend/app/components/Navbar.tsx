@@ -8,7 +8,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border font-[Inter]">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/30 backdrop-blur-xl border-b border-border font-[Inter]">
       <div className="container px-4 mx-auto">
         <div className="flex items-center justify-between h-16 relative">
           {/* Left: Logo */}

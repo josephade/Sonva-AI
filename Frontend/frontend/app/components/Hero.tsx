@@ -115,7 +115,7 @@ const Hero = () => {
                   ease: "linear",
                 }}
               >
-                Starts With a Conversation
+                Starts with a Conversation
               </motion.span>
             </motion.h1>
 
@@ -136,7 +136,7 @@ const Hero = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               Let Sonva handle appointment scheduling, patient inquiries, and
-              cancellations — built for{" "}
+              cancellations - built for{" "}
               <span className="font-semibold text-primary">Irish</span> and{" "}
               <span className="font-semibold text-accent">UK</span> clinics.
             </motion.p>
@@ -174,7 +174,7 @@ const Hero = () => {
                   hover:bg-primary 
                   hover:text-white 
                   shadow-sm
-                  w-full sm:w-auto
+                  w-55 sm:w-200
                 "
               >
                 <div
