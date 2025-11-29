@@ -4,10 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
-// Detect mobile
+{/* Device detection (used for audio bar count + size)*/}
 const isMobileDevice =
   typeof window !== "undefined" && window.innerWidth < 768;
 
+{/* Subtitle timing (t = timestamp in seconds) */}
 interface SubtitleEntry {
   t: number;
   text: string;
@@ -38,6 +39,7 @@ const SUBTITLES: SubtitleEntry[] = [
   { t: 97, text: "Perfect, thank you very much." }
 ];
 
+{/*  Audio visualizer bar settings (mobile vs desktop) */}
 const BAR_COUNT = isMobileDevice ? 12 : 24;
 const BAR_WIDTH = isMobileDevice ? 12 : 20;
 const BAR_GAP = isMobileDevice ? 6 : 12;
@@ -47,15 +49,18 @@ interface DemoProps {
   onClose: () => void;
 }
 
-// bypass TS incorrect signature
+{/* Fallback wrapper to avoid Safari crashes when calling getByteFrequencyData on stopped analyzers */}
 function safeGetFreq(analyser: AnalyserNode, arr: Uint8Array) {
   (analyser as any).getByteFrequencyData(arr);
 }
 
 const Demo = ({ isActive, onClose }: DemoProps) => {
   const [step, setStep] = useState(0);
+
+  // Current subtitle text
   const [subtitle, setSubtitle] = useState("");
 
+  // Visualizer bar heights
   const [barValues, setBarValues] = useState<number[]>(Array(BAR_COUNT).fill(0));
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -66,15 +71,13 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
   const animationRef = useRef<number | null>(null);
   const subtitleInterval = useRef<number | null>(null);
 
-  // Stop EVERYTHING
+  {/*  Stop everything (audio + animations + subtitles) */}
   const stopAll = () => {
     audioRef.current?.pause();
     if (audioRef.current) audioRef.current.currentTime = 0;
 
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
-    }
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    animationRef.current = null;
 
     if (subtitleInterval.current !== null) {
       clearInterval(subtitleInterval.current);
@@ -82,7 +85,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
     }
   };
 
-  // Bars animation
+  /* AUDIO VISUALIZER BAR ANIMATION LOOP */
   let frameSkip = 0;
   const animateBars = () => {
     if (!analyserRef.current || !dataArrayRef.current) return;
@@ -92,7 +95,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
 
     safeGetFreq(analyser, arr);
 
-    // throttle on mobile
+    // Reduce animation workload on mobile
     if (isMobileDevice) {
       frameSkip++;
       if (frameSkip % 2 !== 0) {
@@ -101,6 +104,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
       }
     }
 
+    // Map frequency bins to symmetrical bar layout
     const mid = Math.floor(BAR_COUNT / 2);
     const mapped = Array(BAR_COUNT).fill(0);
 
@@ -113,47 +117,48 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
     animationRef.current = requestAnimationFrame(animateBars);
   };
 
-  // Subtitles
+  /*  SUBTITLE SYNC LOOP */
   const startSubtitles = () => {
     if (!audioRef.current) return;
 
+    // Faster subtitle checks on desktop, slower on mobile
     const speed = isMobileDevice ? 200 : 120;
 
     subtitleInterval.current = window.setInterval(() => {
       const t = audioRef.current!.currentTime;
       let text = "";
 
+      // Determine the last subtitle whose timestamp has passed
       for (let s of SUBTITLES) if (t >= s.t) text = s.text;
 
       setSubtitle(text);
     }, speed);
   };
 
-  // START AUDIO ONLY WHEN STEP === 3
+  /* START AUDIO + ANALYSER CONNECTION (step 3) */
   const startAudio = async () => {
     try {
       const audio = audioRef.current!;
-      const ACtx =
-        window.AudioContext || (window as any).webkitAudioContext;
-
+      const ACtx = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new ACtx();
+
       await ctx.resume();
 
+      // Create analyzer + connections only once
       if (!sourceRef.current) {
         sourceRef.current = ctx.createMediaElementSource(audio);
         const analyser = ctx.createAnalyser();
 
         analyser.fftSize = isMobileDevice ? 32 : 64;
-
         analyserRef.current = analyser;
 
-        const bufferLength = analyser.frequencyBinCount;
-        dataArrayRef.current = new Uint8Array(bufferLength);
+        dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
 
         sourceRef.current.connect(analyser);
         analyser.connect(ctx.destination);
       }
 
+      // iOS requires audio to begin muted
       audio.muted = true;
       await audio.play();
       audio.muted = false;
@@ -170,7 +175,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
     }
   };
 
-  // Handle steps
+  /* Handle transition through steps when modal opens */
   useEffect(() => {
     if (!isActive) {
       stopAll();
@@ -189,14 +194,14 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
     };
   }, [isActive]);
 
-  // Start audio *exactly* at Step 3
+  /* Begin audio playback exactly at Step 3 */
   useEffect(() => {
-    if (step === 3) {
-      startAudio();
-    }
+    if (step === 3) startAudio();
   }, [step]);
+
   return (
     <>
+      {/* Hidden audio element used by the visualizer */}
       <audio
         id="demo-audio"
         src="/demo-call.mp3"
@@ -223,7 +228,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
               Skip
             </button>
 
-            {/* STEP 1 — Starting Demo */}
+            {/* STEP 1 — Loading */}
             {step === 1 && (
               <div className="text-center space-y-4">
                 <p className="text-3xl font-semibold">Starting demo…</p>
@@ -231,7 +236,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
               </div>
             )}
 
-            {/* STEP 2 — Front desk is busy */}
+            {/* STEP 2 — Simulating busy reception */}
             {step === 2 && (
               <div className="text-center space-y-4">
                 <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
@@ -239,15 +244,15 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
               </div>
             )}
 
-            {/* STEP 3 — Audio + Bars + Subtitles */}
+            {/* STEP 3 — Audio + visualizer + subtitles */}
             {step === 3 && (
               <>
-                {/* Bars */}
+                {/* AUDIO BARS */}
                 <div
                   className="absolute bottom-[120px] left-0 right-0 mx-auto flex justify-center"
                   style={{
                     gap: `${BAR_GAP}px`,
-                    transform: "translateZ(0)", // GPU acceleration
+                    transform: "translateZ(0)", 
                   }}
                 >
                   {barValues.map((v, i) => (
@@ -267,7 +272,7 @@ const Demo = ({ isActive, onClose }: DemoProps) => {
                   ))}
                 </div>
 
-                {/* Subtitles */}
+                {/* SUBTITLES */}
                 <div className="absolute bottom-10 w-full text-center px-4">
                   <p className="text-white text-lg font-semibold drop-shadow-lg">
                     {subtitle}

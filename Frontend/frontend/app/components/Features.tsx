@@ -78,9 +78,9 @@ export default function Features() {
   const isMobile = useIsMobile();
 
   return (
-    <section className="relative py-16   overflow-hidden bg-background">
+    <section className="relative py-16 overflow-hidden bg-background">
 
-      {/* REMOVE BLURRED GLOWS ON MOBILE */}
+      {/* BACKGROUND GLOW EFFECTS (Disabled on Mobile) */}
       {!isMobile && (
         <div className="absolute inset-0 opacity-30 pointer-events-none">
           <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
@@ -93,10 +93,9 @@ export default function Features() {
 
       <div className="container px-4 mx-auto relative z-10">
 
-        {/* HEADER */}
         <div className="text-center max-w-5xl mx-auto mb-28">
 
-          {/* STATIC BADGE ON MOBILE */}
+          {/* Header Badge */}
           <div className="inline-flex items-center gap-3 px-8 py-4 rounded-full 
             bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 
             border border-primary/20 backdrop-blur-sm mb-10">
@@ -106,12 +105,14 @@ export default function Features() {
             </span>
           </div>
 
+          {/* Main Heading */}
           <h2 className="
-            text-6xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[10rem] 
+            text-6xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-9xl
             font-black leading-[1] tracking-tight mb-8">
+
             <span className="block text-foreground">Everything</span>
 
-            {/* DISABLE GRADIENT ANIMATION ON MOBILE */}
+            {/* Animated gradient disabled on mobile */}
             <span className={`
               block bg-gradient-to-r from-primary via-accent to-primary 
               bg-clip-text text-transparent
@@ -121,12 +122,15 @@ export default function Features() {
             </span>
           </h2>
 
+          {/* Subheading */}
           <p className="text-2xl md:text-3xl text-muted-foreground font-light max-w-3xl mx-auto">
-            Sonva handles your entire reception desk – instantly
+            Sonva handles your entire reception desk - instantly
           </p>
         </div>
 
-        {/* FEATURES LIST */}
+        {/* FEATURES LIST
+            - Alternates left/right layout
+            - Hover animations on desktop */}
         <div className="max-w-7xl mx-auto space-y-10 md:space-y-16">
           {features.map((f, i) => {
             const isActiveRow = active === i;
@@ -136,14 +140,16 @@ export default function Features() {
                 key={i}
                 onMouseEnter={() => !isMobile && setActive(i)}
                 onMouseLeave={() => !isMobile && setActive(null)}
-                className={`flex items-start gap-8 ${
-                  f.position === "right" ? "flex-row-reverse" : ""
-                } transition-all`}
+                className={`
+                  flex items-start gap-8 transition-all
+                  ${f.position === "right" ? "flex-row-reverse" : ""}
+                `}
               >
-                {/* ICON */}
+
+                {/* FEATURE ICON */}
                 <div className="relative flex-shrink-0">
 
-                  {/* MOBILE: NO BLUR, NO SCALE, NO ROTATE */}
+                  {/* Icon glow effect (desktop only) */}
                   {!isMobile && (
                     <div
                       className={`
@@ -155,6 +161,7 @@ export default function Features() {
                     />
                   )}
 
+                  {/* Icon container */}
                   <div
                     className={`
                       relative w-24 h-24 md:w-32 md:h-32 rounded-full 
@@ -164,6 +171,7 @@ export default function Features() {
                         isActiveRow ? "scale-[1.12] rotate-6" : "scale-100 rotate-0"}
                     `}
                   >
+                    {/* Inner circle */}
                     <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
                       <f.icon
                         className={`
@@ -175,7 +183,7 @@ export default function Features() {
                   </div>
                 </div>
 
-                {/* TEXT */}
+                {/* Feature Text */}
                 <div className="flex-1 min-w-0 relative">
 
                   <div
@@ -185,17 +193,23 @@ export default function Features() {
                       ${isActiveRow ? "opacity-100" : "opacity-90"}
                     `}
                   >
+
+                    {/* Title */}
                     <h3
                       className={`
                         text-4xl md:text-4xl lg:text-7xl font-black leading-snug whitespace-pre-line mb-4
-                        transition-all duration-500 
-                        ${isActiveRow && !isMobile ? `bg-gradient-to-r ${f.gradient} bg-clip-text text-transparent` : "text-foreground"}
+                        transition-all duration-500
+                        ${
+                          isActiveRow && !isMobile
+                            ? `bg-gradient-to-r ${f.gradient} bg-clip-text text-transparent`
+                            : "text-foreground"
+                        }
                       `}
                     >
                       {f.title}
                     </h3>
 
-                    {/* MOBILE: Always Expanded for Performance */}
+                    {/* Description (always expanded on mobile) */}
                     <div
                       className="overflow-hidden transition-all duration-500"
                       style={{
@@ -215,9 +229,9 @@ export default function Features() {
           })}
         </div>
 
-        {/* FOOTER */}
+        {/* FOOTER (Desktop Only) */}
         <div className="text-center mt-32 hidden lg:block">
-          <p className="text-muted-foreground text-lg mb-3 lg:block">
+          <p className="text-muted-foreground text-lg mb-3">
             Hover over features to learn more
           </p>
           <div className="flex items-center justify-center gap-2">
@@ -227,6 +241,7 @@ export default function Features() {
             </span>
           </div>
         </div>
+
       </div>
     </section>
   );
