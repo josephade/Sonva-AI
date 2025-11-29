@@ -7,6 +7,9 @@ import { motion } from "framer-motion";
 import { Check, Workflow, ArrowRight, Zap } from "lucide-react";
 import * as THREE from "three";
 import BookNowButton from "./BookNowButton";
+import { useIsMobile } from "../utils/useIsMobile";
+
+
 
 const integrations = [
   { name: "Dentrix", logo: "🦷", color: "from-blue-500/20 to-cyan-500/20" },
@@ -197,38 +200,54 @@ const Integrations = () => {
               </motion.div>
 
               <div className="grid gap-6">
-                {features.map((feature, index) => (
-                  <motion.div
-                    key={index}
-                    className="group relative p-6 rounded-2xl bg-gradient-to-br from-card/50 to-card/30 
-                               backdrop-blur-sm border border-border/50 hover:border-primary/50 
-                               transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] 
-                               hover:-translate-y-1"
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.15 }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 
-                                      flex items-center justify-center text-2xl flex-shrink-0 
-                                      group-hover:scale-110 transition-transform">
-                        {feature.icon}
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-lg font-bold">{feature.title}</h4>
-                          <ArrowRight className="w-4 h-4 text-primary opacity-0 -translate-x-2 
-                                                group-hover:opacity-100 group-hover:translate-x-0 
-                                                transition-all" />
-                        </div>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {feature.description}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+  {features.map((feature, index) => {
+    // Motion settings only for desktop/tablet
+    const isMobile = useIsMobile();
+    const motionProps = !isMobile
+      ? {
+          initial: { opacity: 0, y: 30 },
+          whileInView: { opacity: 1, y: 0 },
+          transition: { delay: index * 0.15 },
+        }
+      : {};
+
+    return (
+      <motion.div
+        key={index}
+        {...motionProps}
+        className="group relative p-6 rounded-2xl bg-gradient-to-br from-card/50 to-card/30 
+                   backdrop-blur-sm border border-border/50 hover:border-primary/50 
+                   transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] 
+                   hover:-translate-y-1"
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 
+                          flex items-center justify-center text-2xl flex-shrink-0 
+                          group-hover:scale-110 transition-transform">
+            {feature.icon}
+          </div>
+
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center gap-2">
+              <h4 className="text-lg font-bold">{feature.title}</h4>
+
+              {/* Desktop hover arrow, stays disabled visually on mobile */}
+              <ArrowRight
+                className="w-4 h-4 text-primary opacity-0 -translate-x-2 
+                           group-hover:opacity-100 group-hover:translate-x-0 transition-all"
+              />
+            </div>
+
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {feature.description}
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  })}
+</div>
+
             </div>
           </div>
 
