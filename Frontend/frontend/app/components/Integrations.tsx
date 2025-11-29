@@ -201,15 +201,17 @@ const Integrations = () => {
 
               <div className="grid gap-6">
   {features.map((feature, index) => {
-    // Motion settings only for desktop/tablet
     const isMobile = useIsMobile();
-    const motionProps = !isMobile
-      ? {
-          initial: { opacity: 0, y: 30 },
-          whileInView: { opacity: 1, y: 0 },
-          transition: { delay: index * 0.15 },
-        }
-      : {};
+
+    // Mobile = no animation, but 'initial: false' prevents hydration bugs
+    const motionProps = isMobile
+  ? { initial: { opacity: 1, y: 0 } }
+  : {
+      initial: { opacity: 0, y: 30 },
+      whileInView: { opacity: 1, y: 0 },
+      transition: { delay: index * 0.15 },
+    };
+
 
     return (
       <motion.div
@@ -231,7 +233,6 @@ const Integrations = () => {
             <div className="flex items-center gap-2">
               <h4 className="text-lg font-bold">{feature.title}</h4>
 
-              {/* Desktop hover arrow, stays disabled visually on mobile */}
               <ArrowRight
                 className="w-4 h-4 text-primary opacity-0 -translate-x-2 
                            group-hover:opacity-100 group-hover:translate-x-0 transition-all"
@@ -247,6 +248,7 @@ const Integrations = () => {
     );
   })}
 </div>
+
 
             </div>
           </div>
