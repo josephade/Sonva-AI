@@ -96,7 +96,6 @@ const Hero = () => {
                 hidden: { y: 40, opacity: 0 },
                 visible: { y: 0, opacity: 1 },
               }}
-              animate={controls}
             >
               The Future of{" "}
               <span className="font-black text-primary drop-shadow-[0_0_15px_rgba(59,130,246,0.4)]">
@@ -104,11 +103,11 @@ const Hero = () => {
               </span>{" "}
               Care
               <br className="hidden lg:block" />
+
+              {/* Only animate this part with controls */}
               <motion.span
                 className="inline-block whitespace-nowrap bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent animate-gradient font-extrabold"
-                animate={{
-                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                }}
+                animate={controls}
                 transition={{
                   duration: 6,
                   repeat: Infinity,
@@ -119,7 +118,7 @@ const Hero = () => {
               </motion.span>
             </motion.h1>
 
-            {/* SUBHEADLINE (FIXED ON MOBILE) */}
+            {/* Sub-heading */}
             <motion.p
               className="
                 text-base sm:text-lg md:text-[1.35rem]
@@ -141,7 +140,7 @@ const Hero = () => {
               <span className="font-semibold text-accent">UK</span> clinics.
             </motion.p>
 
-            {/* CTA BUTTON (CENTERED ON MOBILE) */}
+            {/* See It In Action Button */}
             <motion.div
               className="
                 flex flex-col 
@@ -174,7 +173,7 @@ const Hero = () => {
                   hover:bg-primary 
                   hover:text-white 
                   shadow-sm
-                  w-55 sm:w-200
+                  w-55 sm:w-60
                 "
               >
                 <div
@@ -196,7 +195,16 @@ const Hero = () => {
 
             {/* Stats */}
             <motion.div
-              className="grid grid-cols-3 gap-8 pt-6 max-w-2xl mx-auto"
+              className="
+                grid 
+                grid-cols-3 
+                gap-4 
+                pt-6 
+                max-w-xs sm:max-w-2xl 
+                mx-auto 
+                z-20 
+                relative
+              "
               variants={{
                 hidden: {},
                 visible: {
@@ -214,7 +222,7 @@ const Hero = () => {
               ].map((stat, i) => (
                 <motion.div
                   key={i}
-                  className="space-y-2"
+                  className="space-y-1"
                   variants={{
                     hidden: { y: 30, opacity: 0 },
                     visible: { y: 0, opacity: 1 },
@@ -225,13 +233,13 @@ const Hero = () => {
                       <img
                         src={`/${stat.icon}`}
                         alt={stat.label}
-                        className="h-9 w-9 object-contain brightness-110 drop-shadow-md"
+                        className="h-6 w-6 object-contain brightness-110 drop-shadow-md"
                       />
                     ) : (
-                      <stat.icon className="h-6 w-6 text-primary mb-2" />
+                      <stat.icon className="h-6 w-6 text-primary" />
                     )}
                   </div>
-                  <div className="text-sm text-muted-foreground text-center">
+                  <div className="text-xs sm:text-sm text-muted-foreground text-center">
                     {stat.label}
                   </div>
                 </motion.div>
