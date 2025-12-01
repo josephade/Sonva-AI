@@ -3,14 +3,25 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-
-load_dotenv()
+from dateutil import parser
 
 # Google Calendar permission scope
 # This tells Google what the service account is allowed to do.
 # "calendar" means full access: create, update, delete events.
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
+
+load_dotenv()
+
+GOOGLE_CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID")
+
+SERVICE_ACCOUNT_FILE = "service_account.json"
+
+credentials = service_account.Credentials.from_service_account_file(
+    SERVICE_ACCOUNT_FILE, scopes=SCOPES
+)
+
+service = build("calendar", "v3", credentials=credentials, cache_discovery=False)
 
 def get_calendar_service():
     """
@@ -173,3 +184,46 @@ def get_freebusy(start: datetime, end: datetime):
     response = service.freebusy().query(body=body).execute()
 
     return response["calendars"][os.getenv("GOOGLE_CALENDAR_ID")]["busy"]
+
+
+def is_time_available(start_dt, end_dt):
+    """
+    Checks if a time slot is available by querying Google Calendar.
+    Returns True if free, False if conflict exists.
+    """
+
+    events_result = (
+        service.events()
+        .list(
+            calendarId=GOOGLE_CALENDAR_ID,
+            timeMin=start_dt,
+            timeMax=end_dt,
+            singleEvents=True,
+            orderBy="startTime",
+        )
+        .execute()
+    )
+
+    events = events_result.get("items", [])
+
+    return len(events) == 0  # free if no events overlap
+
+def find_next_available_slot(start_time, duration_minutes):
+    """
+    Looks forward through the day in blocks until it finds a free slot.
+    """
+
+    current = parser.isoparse(start_time)
+    step = timedelta(minutes=15)  # check every 15 minutes
+
+    while True:
+        end_time = current + timedelta(minutes=duration_minutes)
+
+        if is_time_available(current.isoformat(), end_time.isoformat()):
+            return {
+                "start": current.isoformat(),
+                "end": end_time.isoformat()
+            }
+
+        current += step
+

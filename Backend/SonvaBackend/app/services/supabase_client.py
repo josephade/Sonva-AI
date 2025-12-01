@@ -56,9 +56,27 @@ def log_call_event(
     - Appointment history
     """
 
+    import uuid
+
     if call_id is None:
         call_id = str(uuid.uuid4())
 
+    # -----------------------------
+    # Extract start/end from Google event
+    # -----------------------------
+    booking_start = None
+    booking_end = None
+
+    if isinstance(meta, dict):
+        try:
+            booking_start = meta.get("start", {}).get("dateTime")
+            booking_end = meta.get("end", {}).get("dateTime")
+        except Exception:
+            pass
+
+    # -----------------------------
+    # Build payload
+    # -----------------------------
     payload = {
         "booking_status": booking_status,
         "patient_name": patient_name,
@@ -68,14 +86,17 @@ def log_call_event(
         "duration_seconds": duration_seconds,
         "meta": meta,
         "outcome_value_eur": outcome_value_eur,
+        "booking_start": booking_start,
+        "booking_end": booking_end,
     }
 
-    # Remove empty values (None)
+    # Remove empty values
     clean_payload = {k: v for k, v in payload.items() if v is not None}
 
-    print("Logging call event:", clean_payload)  # helpful for Render logs
+    print("Logging call event:", clean_payload)
 
     supabase.table("call_events").insert(clean_payload).execute()
+
 
 
 
@@ -125,4 +146,36 @@ def find_appointments_by_phone(phone_number: str):
         })
 
     return appointments
+
+def get_duration_for_type(appointment_type: str) -> int:
+    """
+    Returns the duration (in minutes) for the given appointment type.
+    Example: 'cleaning' -> 60
+    """
+
+    result = (
+        supabase.table("appointment_types")
+        .select("duration_minutes")
+        .eq("name", appointment_type)
+        .single()
+        .execute()
+    )
+
+    if not result.data:
+        raise ValueError(f"Unknown appointment type: {appointment_type}")
+
+    return result.data["duration_minutes"]
+
+from dateutil import parser
+from datetime import timedelta
+
+def calculate_end_time(start_iso: str, duration_minutes: int) -> str:
+    """
+    Computes the end time based on start time + duration.
+    Returns ISO 8601 timestamp.
+    """
+    start_dt = parser.isoparse(start_iso)
+    end_dt = start_dt + timedelta(minutes=duration_minutes)
+    return end_dt.isoformat()
+
 

@@ -4,11 +4,13 @@ from app.models.booking_models import (
     CancelRequest,
     RescheduleRequest
 )
-from app.services.google_calender import create_event, delete_event, update_event
+from app.services.google_calender import create_event, delete_event, update_event, find_next_available_slot, is_time_available
 from app.services.supabase_client import (
     get_appointment_duration,
     log_call_event,
-    find_appointments_by_phone
+    find_appointments_by_phone,
+    get_duration_for_type,
+    calculate_end_time
 )
 
 router = APIRouter()
@@ -19,34 +21,42 @@ router = APIRouter()
 # -------------------------------------------------
 @router.post("/book")
 def book(req: BookRequest):
-    """
-    BOOK A NEW APPOINTMENT
-    ----------------------
-    Steps:
-      1. Look up duration for appointment_type (Supabase)
-      2. Create calendar event in Google Calendar
-      3. Log booking into call_events table in Supabase
-      4. Return event data to caller (Telnyx or frontend)
-    """
 
-    # 1. Fetch duration from appointment_types table
-    duration = get_appointment_duration(req.appointment_type)
-    if not duration:
+    # Convert input time to ISO
+    start_dt = req.start
+    appointment_duration = get_duration_for_type(req.appointment_type)
+    end_dt = calculate_end_time(start_dt, appointment_duration)
+
+    # -----------------------------
+    # 1. Check if slot is available
+    # -----------------------------
+    if not is_time_available(start_dt, end_dt):
+        # If taken, find the next available slot
+        suggested = find_next_available_slot(start_dt, appointment_duration)
+
         raise HTTPException(
-            status_code=400,
-            detail=f"Unknown appointment type: {req.appointment_type}"
+            status_code=409,
+            detail={
+                "error": "slot_taken",
+                "message": "That time slot is already booked.",
+                "suggested_time": suggested,
+            },
         )
 
-    # 2. Create event in Google Calendar
+    # -----------------------------
+    # 2. Create Google Calendar event
+    # -----------------------------
     event = create_event(
         summary=req.appointment_type,
-        start=req.start,
-        duration_minutes=duration,
+        start=start_dt,
+        end=end_dt,
         patient_phone=req.patient_phone,
         patient_name=req.patient_name
     )
 
-    # 3. Log this booking in Supabase
+    # -----------------------------
+    # 3. Log into Supabase
+    # -----------------------------
     log_call_event(
         booking_status="booked",
         patient_name=req.patient_name,
@@ -55,14 +65,8 @@ def book(req: BookRequest):
         meta=event
     )
 
-    # 4. Return response back to Telnyx agent/frontend
-    return {
-        "status": "booked",
-        "event_id": event["id"],
-        "start": event["start"]["dateTime"],
-        "end": event["end"]["dateTime"],
-        "duration_minutes": duration,
-    }
+    return {"status": "success", "event": event}
+
 
 
 # -------------------------------------------------
