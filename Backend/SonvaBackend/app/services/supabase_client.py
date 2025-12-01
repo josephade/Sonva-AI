@@ -1,6 +1,7 @@
 import os
 from supabase import create_client
 from dotenv import load_dotenv
+import uuid
 
 load_dotenv()
 
@@ -54,6 +55,9 @@ def log_call_event(
     - Conversion tracking
     - Appointment history
     """
+
+    if call_id is None:
+        call_id = str(uuid.uuid4())
 
     payload = {
         "booking_status": booking_status,
