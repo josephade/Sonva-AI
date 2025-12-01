@@ -1,10 +1,11 @@
+import os
 from fastapi import APIRouter, HTTPException
 from app.models.booking_models import (
     BookRequest,
     CancelRequest,
     RescheduleRequest
 )
-from app.services.google_calender import create_event, delete_event, update_event, find_next_available_slot, is_time_available
+from app.services.google_calender import create_event, delete_event, update_event, find_next_available_slot, is_time_available, get_calendar_service
 from app.services.supabase_client import (
     get_appointment_duration,
     log_call_event,
@@ -14,6 +15,8 @@ from app.services.supabase_client import (
 )
 
 router = APIRouter()
+
+GOOGLE_CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID")
 
 
 # -------------------------------------------------
@@ -78,19 +81,35 @@ def cancel(req: CancelRequest):
     CANCEL AN APPOINTMENT
     ----------------------
     Steps:
-      1. Delete event from Google Calendar
-      2. Log cancellation in Supabase
+      1. Fetch event from Google Calendar (to extract patient info)
+      2. Delete event
+      3. Log cancellation with patient name + phone
     """
 
+    # --- STEP 1: Fetch event BEFORE deleting it ---
+    service = get_calendar_service()
+    event = service.events().get(
+        calendarId=GOOGLE_CALENDAR_ID,
+        eventId=req.event_id
+    ).execute()
+
+    patient_name = event.get("extendedProperties", {}).get("private", {}).get("patient_name")
+    patient_phone = event.get("extendedProperties", {}).get("private", {}).get("patient_phone")
+
+    # --- STEP 2: Delete event ---
     delete_event(req.event_id)
 
+    # --- STEP 3: Log cancellation ---
     log_call_event(
         booking_status="cancelled",
         call_reason="cancellation",
+        patient_name=patient_name,
+        patient_phone=patient_phone,
         meta={"event_id": req.event_id}
     )
 
     return {"status": "cancelled"}
+
 
 
 # -------------------------------------------------
@@ -102,19 +121,34 @@ def reschedule(req: RescheduleRequest):
     RESCHEDULE AN APPOINTMENT
     --------------------------
     Steps:
-      1. Update Google Calendar event
-      2. Log reschedule in Supabase
+      1. Fetch event to extract patient info
+      2. Update event with new time
+      3. Log reschedule with patient details
     """
 
+    # --- STEP 1: Fetch current event BEFORE updating ---
+    service = get_calendar_service()
+    event = service.events().get(
+        calendarId=GOOGLE_CALENDAR_ID,
+        eventId=req.event_id
+    ).execute()
+
+    patient_name = event.get("extendedProperties", {}).get("private", {}).get("patient_name")
+    patient_phone = event.get("extendedProperties", {}).get("private", {}).get("patient_phone")
+
+    # --- STEP 2: Update event ---
     updated = update_event(
         event_id=req.event_id,
         new_start=req.new_start,
-        duration_minutes=30  # can later improve to fetch original duration
+        duration_minutes=30
     )
 
+    # --- STEP 3: Log reschedule ---
     log_call_event(
         booking_status="rescheduled",
         call_reason="reschedule",
+        patient_name=patient_name,
+        patient_phone=patient_phone,
         meta=updated
     )
 
@@ -122,9 +156,8 @@ def reschedule(req: RescheduleRequest):
         "status": "rescheduled",
         "event_id": updated["id"],
         "start": updated["start"]["dateTime"],
-        "end": updated["end"]["dateTime"],
+        "end": updated["end"]["dateTime"]
     }
-
 
 # -------------------------------------------------
 # GET BOOKINGS BY PHONE
