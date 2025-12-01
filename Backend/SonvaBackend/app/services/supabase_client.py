@@ -48,13 +48,11 @@ def log_call_event(
     """
     Saves a call event into Supabase.
 
-    Why we log:
-    - To show call activity in the dentist dashboard
-    - To track bookings made by the AI receptionist
-    - To calculate conversion rates (calls → bookings)
-    - To store metadata like the Google Calendar event
-
-    Anything that is None is removed from the payload.
+    Logged data powers:
+    - Dentist dashboard call timeline
+    - AI agent memory (has this person booked before?)
+    - Conversion tracking
+    - Appointment history
     """
 
     payload = {
@@ -68,25 +66,28 @@ def log_call_event(
         "outcome_value_eur": outcome_value_eur,
     }
 
-    filtered = {k: v for k, v in payload.items() if v is not None}
+    # Remove empty values (None)
+    clean_payload = {k: v for k, v in payload.items() if v is not None}
 
-    supabase.table("call_events").insert(filtered).execute()
+    print("Logging call event:", clean_payload)  # helpful for Render logs
+
+    supabase.table("call_events").insert(clean_payload).execute()
+
 
 
 def find_appointments_by_phone(phone_number: str):
     """
-    Returns all active booked appointments for a given phone number.
+    Returns all ACTIVE booked appointments for a given phone number.
 
-    How it works:
-    1. Searches the 'call_events' table for entries where:
-       - patient_phone matches
-       - booking_status == "booked"
-    2. Extracts metadata (actual calendar event details)
-    3. Returns a clean list of appointments for display
-
-    This powers:
-    - The AI receptionist ("Do I already have an appointment?")
-    - The dentist dashboard upcoming appointments view
+    Returned objects look like:
+    {
+        "event_id": "...",
+        "summary": "Checkup",
+        "start": "2025-02-05T15:00:00",
+        "end": "2025-02-05T15:20:00",
+        "patient_name": "John Doe",
+        "patient_phone": "+353871234567"
+    }
     """
 
     result = (
@@ -98,21 +99,26 @@ def find_appointments_by_phone(phone_number: str):
         .execute()
     )
 
+    if not result.data:
+        return []
+
     appointments = []
 
     for row in result.data:
         meta = row.get("meta", {})
 
-        if not meta or "id" not in meta:
+        # We only return results if there is calendar metadata
+        if not isinstance(meta, dict) or "id" not in meta:
             continue
 
         appointments.append({
-            "event_id": meta["id"],
+            "event_id": meta.get("id"),
             "summary": meta.get("summary") or meta.get("title") or "Appointment",
-            "start": meta["start"]["dateTime"] if "start" in meta else None,
-            "end": meta["end"]["dateTime"] if "end" in meta else None,
+            "start": meta.get("start", {}).get("dateTime"),
+            "end": meta.get("end", {}).get("dateTime"),
             "patient_name": row.get("patient_name"),
             "patient_phone": row.get("patient_phone"),
         })
 
     return appointments
+
