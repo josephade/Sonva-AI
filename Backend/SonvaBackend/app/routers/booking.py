@@ -4,7 +4,7 @@ from app.models.booking_models import (
     CancelRequest,
     RescheduleRequest
 )
-from app.services.google_client import create_event, delete_event, update_event
+from app.services.google_calender import create_event, delete_event, update_event
 from app.services.supabase_client import (
     get_appointment_duration,
     log_call_event,
