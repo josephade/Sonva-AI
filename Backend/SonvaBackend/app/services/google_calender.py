@@ -195,21 +195,20 @@ def get_calendar_service():
 
 def is_time_available(start_dt, end_dt):
     """
-    Checks if a time slot is free on Google Calendar.
-    Accepts either datetime objects or strings.
-    Converts everything into correct ISO format for Google.
+    Convert datetime objects into ISO8601 strings that Google accepts.
+    No Z. No double timezone. Just pure isoformat().
     """
 
-    # Convert to ISO string if datetime object
     if isinstance(start_dt, datetime):
-        start_dt = start_dt.replace(microsecond=0).isoformat() + "Z"
+        start_dt = start_dt.replace(microsecond=0).isoformat()
 
     if isinstance(end_dt, datetime):
-        end_dt = end_dt.replace(microsecond=0).isoformat() + "Z"
+        end_dt = end_dt.replace(microsecond=0).isoformat()
+
+    service = get_calendar_service()
 
     events_result = (
-        get_calendar_service()
-        .events()
+        service.events()
         .list(
             calendarId=os.getenv("GOOGLE_CALENDAR_ID"),
             timeMin=start_dt,
@@ -222,6 +221,7 @@ def is_time_available(start_dt, end_dt):
 
     events = events_result.get("items", [])
     return len(events) == 0
+
 
 def find_next_available_slot(start_time, duration_minutes):
     """
