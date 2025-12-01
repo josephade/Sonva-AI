@@ -52,7 +52,8 @@ def book(req: BookRequest):
     event = create_event(
         summary=req.appointment_type,
         start=start_dt,
-        end=end_dt,
+        # end=end_dt,
+        duration_minutes=appointment_duration,
         patient_phone=req.patient_phone,
         patient_name=req.patient_name
     )
