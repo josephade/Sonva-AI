@@ -1,4 +1,5 @@
 import os
+from app.services.supabase_client import supabase
 from fastapi import APIRouter, HTTPException
 from app.models.booking_models import (
     BookRequest,
@@ -174,15 +175,64 @@ def reschedule(req: RescheduleRequest):
 @router.get("/by_phone")
 def get_bookings_by_phone(phone: str):
     """
-    GET ALL ACTIVE BOOKINGS FOR A GIVEN PHONE NUMBER
-    ------------------------------------------------
-    Only returns bookings with booking_status = "booked"
-    from Supabase.
+    Fetch active (non-cancelled) appointments for a patient.
+    Combines Google Calendar + Supabase cancellation history.
     """
 
-    appointments = find_appointments_by_phone(phone)
+    service = get_calendar_service()
+
+    # --- STEP 1: Fetch ALL GC events that match this phone ---
+    events_result = service.events().list(
+        calendarId=GOOGLE_CALENDAR_ID,
+        singleEvents=True,
+        orderBy="startTime"
+    ).execute()
+
+    gc_events = events_result.get("items", [])
+
+    # Filter only appointments with matching phone number
+    user_events = []
+    for ev in gc_events:
+        ext = ev.get("extendedProperties", {}).get("private", {})
+        if ext.get("patient_phone") == phone:
+            user_events.append(ev)
+
+    # --- STEP 2: Fetch cancellations from Supabase ---
+    cancelled = (
+        supabase.table("call_events")
+        .select("meta")
+        .eq("booking_status", "cancelled")
+        .execute()
+        .data
+    )
+
+    cancelled_ids = set([
+        item["meta"]["event_id"]
+        for item in cancelled
+        if "meta" in item and item["meta"] and "event_id" in item["meta"]
+    ])
+
+    # --- STEP 3: Remove cancelled bookings ---
+    active_events = [
+        ev for ev in user_events
+        if ev.get("id") not in cancelled_ids
+    ]
+
+    # --- STEP 4: Format result ---
+    formatted = []
+    for ev in active_events:
+        ext = ev.get("extendedProperties", {}).get("private", {})
+        formatted.append({
+            "event_id": ev["id"],
+            "summary": ev.get("summary"),
+            "start": ev["start"]["dateTime"],
+            "end": ev["end"]["dateTime"],
+            "patient_name": ext.get("patient_name"),
+            "patient_phone": ext.get("patient_phone")
+        })
 
     return {
-        "count": len(appointments),
-        "appointments": appointments
+        "count": len(formatted),
+        "appointments": formatted
     }
+
