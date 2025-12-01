@@ -5,23 +5,15 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from dateutil import parser
 
+load_dotenv()
+
 # Google Calendar permission scope
 # This tells Google what the service account is allowed to do.
 # "calendar" means full access: create, update, delete events.
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
-
-load_dotenv()
-
 GOOGLE_CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID")
 
-SERVICE_ACCOUNT_FILE = "service_account.json"
-
-credentials = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES
-)
-
-service = build("calendar", "v3", credentials=credentials, cache_discovery=False)
 
 def get_calendar_service():
     """
@@ -185,12 +177,29 @@ def get_freebusy(start: datetime, end: datetime):
 
     return response["calendars"][os.getenv("GOOGLE_CALENDAR_ID")]["busy"]
 
+def get_calendar_service():
+    creds_info = {
+        "type": "service_account",
+        "client_email": os.getenv("GOOGLE_CLIENT_EMAIL"),
+        "private_key": os.getenv("GOOGLE_PRIVATE_KEY").replace("\\n", "\n"),
+        "token_uri": "https://oauth2.googleapis.com/token",
+    }
+
+    credentials = service_account.Credentials.from_service_account_info(
+        creds_info, scopes=SCOPES
+    )
+
+    return build("calendar", "v3", credentials=credentials, cache_discovery=False)
+
+
 
 def is_time_available(start_dt, end_dt):
     """
     Checks if a time slot is available by querying Google Calendar.
     Returns True if free, False if conflict exists.
     """
+
+    service = get_calendar_service()
 
     events_result = (
         service.events()
@@ -206,7 +215,8 @@ def is_time_available(start_dt, end_dt):
 
     events = events_result.get("items", [])
 
-    return len(events) == 0  # free if no events overlap
+    return len(events) == 0
+
 
 def find_next_available_slot(start_time, duration_minutes):
     """
