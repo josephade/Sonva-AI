@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from services.supabase_client import supabase
+from app.services.supabase_client import supabase
 from datetime import datetime, timedelta
 
 router = APIRouter()

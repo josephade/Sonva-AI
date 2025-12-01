@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException
-from models.booking_models import (
+from app.models.booking_models import (
     BookRequest,
     CancelRequest,
     RescheduleRequest
 )
-from services.google_client import create_event, delete_event, update_event
-from services.supabase_client import (
+from app.services.google_client import create_event, delete_event, update_event
+from app.services.supabase_client import (
     get_appointment_duration,
     log_call_event,
     find_appointments_by_phone

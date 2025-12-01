@@ -1,17 +1,18 @@
 from fastapi import FastAPI
-from routers.booking import router as booking_router
-from routers.dashboard import router as dashboard_router
-from routers.telnyx import router as telnyx_router
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.routers.booking import router as booking_router
+from app.routers.dashboard import router as dashboard_router
+from app.routers.telnyx import router as telnyx_router
 
 app = FastAPI()
 
-# CORS
+# CORS setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["*"],
     allow_headers=["*"],
+    allow_methods=["*"],
 )
 
 @app.get("/")

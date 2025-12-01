@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
 import json
-from services.supabase_client import log_call_event
-from routers.booking import book, cancel, reschedule
+from app.services.supabase_client import log_call_event
+from app.routers.booking import book, cancel, reschedule
 
 router = APIRouter()
 
