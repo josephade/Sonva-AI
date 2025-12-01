@@ -223,18 +223,18 @@ def is_time_available(start_dt, end_dt):
     return len(events) == 0
 
 
-def find_next_available_slot(start_time, duration_minutes):
+def find_next_available_slot(start_time: datetime, duration_minutes: int):
     """
     Looks forward through the day in blocks until it finds a free slot.
+    Accepts a datetime object, not a string.
     """
-
-    current = parser.isoparse(start_time)
-    step = timedelta(minutes=15)  # check every 15 minutes
+    current = start_time  # already a datetime object
+    step = timedelta(minutes=15)
 
     while True:
         end_time = current + timedelta(minutes=duration_minutes)
 
-        if is_time_available(current.isoformat(), end_time.isoformat()):
+        if is_time_available(current, end_time):
             return {
                 "start": current.isoformat(),
                 "end": end_time.isoformat()
