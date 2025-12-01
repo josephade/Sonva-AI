@@ -122,29 +122,35 @@ def reschedule(req: RescheduleRequest):
     RESCHEDULE AN APPOINTMENT
     --------------------------
     Steps:
-      1. Fetch event to extract patient info
-      2. Update event with new time
-      3. Log reschedule with patient details
+      1. Fetch existing event (to get duration + patient info)
+      2. Update event to new start time
+      3. Log the rescheduled appointment with full details
     """
 
-    # --- STEP 1: Fetch current event BEFORE updating ---
     service = get_calendar_service()
+
+    # --- STEP 1: Fetch the existing event ---
     event = service.events().get(
         calendarId=GOOGLE_CALENDAR_ID,
         eventId=req.event_id
     ).execute()
 
-    patient_name = event.get("extendedProperties", {}).get("private", {}).get("patient_name")
-    patient_phone = event.get("extendedProperties", {}).get("private", {}).get("patient_phone")
+    # Extract patient info
+    private = event.get("extendedProperties", {}).get("private", {})
+    patient_name = private.get("patient_name")
+    patient_phone = private.get("patient_phone")
 
-    # --- STEP 2: Update event ---
+    # Extract original duration
+    original_duration = int(private.get("duration", 30))  # fallback to 30 if missing
+
+    # --- STEP 2: Update event with SAME duration ---
     updated = update_event(
         event_id=req.event_id,
         new_start=req.new_start,
-        duration_minutes=30
+        duration_minutes=original_duration
     )
 
-    # --- STEP 3: Log reschedule ---
+    # --- STEP 3: Log the reschedule ---
     log_call_event(
         booking_status="rescheduled",
         call_reason="reschedule",
@@ -157,8 +163,10 @@ def reschedule(req: RescheduleRequest):
         "status": "rescheduled",
         "event_id": updated["id"],
         "start": updated["start"]["dateTime"],
-        "end": updated["end"]["dateTime"]
+        "end": updated["end"]["dateTime"],
+        "duration_minutes": original_duration
     }
+
 
 # -------------------------------------------------
 # GET BOOKINGS BY PHONE

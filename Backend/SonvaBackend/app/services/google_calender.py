@@ -78,6 +78,7 @@ def create_event(summary, start, duration_minutes, patient_phone, patient_name=N
                 "patient_phone": patient_phone,
                 "patient_name": patient_name or "",
                 "source": "AI",
+                "duration": str(duration_minutes)
             }
         },
     }
