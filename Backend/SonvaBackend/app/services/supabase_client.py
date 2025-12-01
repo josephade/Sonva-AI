@@ -167,15 +167,22 @@ def get_duration_for_type(appointment_type: str) -> int:
     return result.data["duration_minutes"]
 
 from dateutil import parser
-from datetime import timedelta
+from datetime import datetime, timedelta
 
-def calculate_end_time(start_iso: str, duration_minutes: int) -> str:
+def calculate_end_time(start_input, duration_minutes):
     """
-    Computes the end time based on start time + duration.
-    Returns ISO 8601 timestamp.
+    Accepts either:
+    - ISO string
+    - datetime object
     """
-    start_dt = parser.isoparse(start_iso)
+
+    if isinstance(start_input, datetime):
+        start_dt = start_input
+    else:
+        start_dt = parser.isoparse(start_input)
+
     end_dt = start_dt + timedelta(minutes=duration_minutes)
-    return end_dt.isoformat()
+    return end_dt
+
 
 

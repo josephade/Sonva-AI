@@ -28,7 +28,7 @@ def book(req: BookRequest):
     # Convert input time to ISO
     start_dt = req.start
     appointment_duration = get_duration_for_type(req.appointment_type)
-    end_dt = calculate_end_time(start_dt, appointment_duration)
+    end_dt = calculate_end_time(start_dt.isoformat(), appointment_duration)
 
     # -----------------------------
     # 1. Check if slot is available
