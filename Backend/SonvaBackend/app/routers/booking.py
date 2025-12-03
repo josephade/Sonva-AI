@@ -6,7 +6,14 @@ from app.models.booking_models import (
     CancelRequest,
     RescheduleRequest
 )
-from app.services.google_calender import create_event, delete_event, update_event, find_next_available_slot, is_time_available, get_calendar_service
+from app.services.google_calender import (
+    create_event,
+    delete_event,
+    update_event,
+    find_next_available_slot,
+    is_time_available,
+    get_calendar_service
+)
 from app.services.supabase_client import (
     get_appointment_duration,
     log_call_event,
@@ -25,17 +32,24 @@ GOOGLE_CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID")
 # -------------------------------------------------
 @router.post("/book")
 def book(req: BookRequest):
+    """
+    BOOK AN APPOINTMENT
+    --------------------
+    Steps:
+      1. Convert provided start time and calculate end time based on duration
+      2. Check if the chosen time is free
+      3. Create the appointment in Google Calendar
+      4. Log the booking into Supabase
+    """
 
-    # Convert input time to ISO
+    # Convert input start time to datetime and calculate end time
     start_dt = req.start
     appointment_duration = get_duration_for_type(req.appointment_type)
     end_dt = calculate_end_time(start_dt.isoformat(), appointment_duration)
 
-    # -----------------------------
-    # 1. Check if slot is available
-    # -----------------------------
+    # Step 1 — Check slot availability
+    # If slot is taken, suggest the next available open time
     if not is_time_available(start_dt, end_dt):
-        # If taken, find the next available slot
         suggested = find_next_available_slot(start_dt, appointment_duration)
 
         raise HTTPException(
@@ -47,21 +61,16 @@ def book(req: BookRequest):
             },
         )
 
-    # -----------------------------
-    # 2. Create Google Calendar event
-    # -----------------------------
+    # Step 2 — Create Google Calendar Event
     event = create_event(
         summary=req.appointment_type,
         start=start_dt,
-        # end=end_dt,
         duration_minutes=appointment_duration,
         patient_phone=req.patient_phone,
         patient_name=req.patient_name
     )
 
-    # -----------------------------
-    # 3. Log into Supabase
-    # -----------------------------
+    # Step 3 — Log the booking into Supabase history table
     log_call_event(
         booking_status="booked",
         patient_name=req.patient_name,
@@ -83,25 +92,28 @@ def cancel(req: CancelRequest):
     CANCEL AN APPOINTMENT
     ----------------------
     Steps:
-      1. Fetch event from Google Calendar (to extract patient info)
-      2. Delete event
-      3. Log cancellation with patient name + phone
+      1. Pull the event from Google Calendar to get patient info
+      2. Delete the event from Calendar
+      3. Log the cancellation in Supabase
     """
 
-    # --- STEP 1: Fetch event BEFORE deleting it ---
+    # Step 1 — Fetch event BEFORE deleting it
+    # This ensures we still have patient details for logging
     service = get_calendar_service()
     event = service.events().get(
         calendarId=GOOGLE_CALENDAR_ID,
         eventId=req.event_id
     ).execute()
 
-    patient_name = event.get("extendedProperties", {}).get("private", {}).get("patient_name")
-    patient_phone = event.get("extendedProperties", {}).get("private", {}).get("patient_phone")
+    # Extract patient metadata from custom event fields
+    private = event.get("extendedProperties", {}).get("private", {})
+    patient_name = private.get("patient_name")
+    patient_phone = private.get("patient_phone")
 
-    # --- STEP 2: Delete event ---
+    # Step 2 — Remove the event from Google Calendar
     delete_event(req.event_id)
 
-    # --- STEP 3: Log cancellation ---
+    # Step 3 — Log cancellation in Supabase
     log_call_event(
         booking_status="cancelled",
         call_reason="cancellation",
@@ -120,38 +132,38 @@ def cancel(req: CancelRequest):
 @router.post("/reschedule")
 def reschedule(req: RescheduleRequest):
     """
-    RESCHEDULE AN APPOINTMENT
-    --------------------------
+    RESCHEDULE APPOINTMENT
+    -----------------------
     Steps:
-      1. Fetch existing event (to get duration + patient info)
-      2. Update event to new start time
-      3. Log the rescheduled appointment with full details
+      1. Fetch existing event to extract patient info and duration
+      2. Update Google Calendar event to new time
+      3. Log the reschedule event in Supabase
     """
 
     service = get_calendar_service()
 
-    # --- STEP 1: Fetch the existing event ---
+    # Step 1 — Fetch original event
     event = service.events().get(
         calendarId=GOOGLE_CALENDAR_ID,
         eventId=req.event_id
     ).execute()
 
-    # Extract patient info
+    # Pull patient details & duration from extended properties
     private = event.get("extendedProperties", {}).get("private", {})
     patient_name = private.get("patient_name")
     patient_phone = private.get("patient_phone")
 
-    # Extract original duration
-    original_duration = int(private.get("duration", 30))  # fallback to 30 if missing
+    # Extract original appointment duration, defaulting to 30 mins
+    original_duration = int(private.get("duration", 30))
 
-    # --- STEP 2: Update event with SAME duration ---
+    # Step 2 — Update event with SAME duration but new start time
     updated = update_event(
         event_id=req.event_id,
         new_start=req.new_start,
         duration_minutes=original_duration
     )
 
-    # --- STEP 3: Log the reschedule ---
+    # Step 3 — Log the reschedule
     log_call_event(
         booking_status="rescheduled",
         call_reason="reschedule",
@@ -169,19 +181,28 @@ def reschedule(req: RescheduleRequest):
     }
 
 
+
 # -------------------------------------------------
 # GET BOOKINGS BY PHONE
 # -------------------------------------------------
 @router.get("/by_phone")
 def get_bookings_by_phone(phone: str):
     """
-    Fetch active (non-cancelled) appointments for a patient.
-    Combines Google Calendar + Supabase cancellation history.
+    GET ACTIVE BOOKINGS BY PHONE
+    -----------------------------
+    Returns all *non-cancelled* Google Calendar events for a specific phone number.
+
+    Logic:
+      1. Fetch all Google Calendar events
+      2. Filter only those with the matching phone
+      3. Fetch all cancellations stored in Supabase
+      4. Remove cancelled events from the list
+      5. Return clean list of active appointments
     """
 
     service = get_calendar_service()
 
-    # --- STEP 1: Fetch ALL GC events that match this phone ---
+    # Step 1 — Fetch EVERY event from the Google Calendar
     events_result = service.events().list(
         calendarId=GOOGLE_CALENDAR_ID,
         singleEvents=True,
@@ -190,14 +211,14 @@ def get_bookings_by_phone(phone: str):
 
     gc_events = events_result.get("items", [])
 
-    # Filter only appointments with matching phone number
+    # Filter for events that contain this phone number
     user_events = []
     for ev in gc_events:
         ext = ev.get("extendedProperties", {}).get("private", {})
         if ext.get("patient_phone") == phone:
             user_events.append(ev)
 
-    # --- STEP 2: Fetch cancellations from Supabase ---
+    # Step 2 — Fetch all cancelled event IDs from Supabase
     cancelled = (
         supabase.table("call_events")
         .select("meta")
@@ -206,19 +227,19 @@ def get_bookings_by_phone(phone: str):
         .data
     )
 
-    cancelled_ids = set([
+    cancelled_ids = {
         item["meta"]["event_id"]
         for item in cancelled
-        if "meta" in item and item["meta"] and "event_id" in item["meta"]
-    ])
+        if item.get("meta") and item["meta"].get("event_id")
+    }
 
-    # --- STEP 3: Remove cancelled bookings ---
+    # Step 3 — Only keep events NOT cancelled
     active_events = [
         ev for ev in user_events
         if ev.get("id") not in cancelled_ids
     ]
 
-    # --- STEP 4: Format result ---
+    # Step 4 — Format data for response
     formatted = []
     for ev in active_events:
         ext = ev.get("extendedProperties", {}).get("private", {})
@@ -235,4 +256,3 @@ def get_bookings_by_phone(phone: str):
         "count": len(formatted),
         "appointments": formatted
     }
-

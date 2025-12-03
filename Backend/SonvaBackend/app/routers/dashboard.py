@@ -16,7 +16,7 @@ def verify_admin(api_key: str = Header(None)):
     ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 
     if not ADMIN_API_KEY:
-        return True  # no protection configured
+        return True  
 
     if api_key != ADMIN_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid admin API key")

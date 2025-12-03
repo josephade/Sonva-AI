@@ -5,21 +5,31 @@ import uuid
 
 load_dotenv()
 
-# Create Supabase client once so the whole app can use it
+# -------------------------------------------------
+# SUPABASE CLIENT (GLOBAL SINGLETON)
+# -------------------------------------------------
+# We create the client ONCE so the entire FastAPI backend shares it.
+# This avoids repeatedly opening new HTTP connections on each request.
 supabase = create_client(
     os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    os.getenv("SUPABASE_SERVICE_ROLE_KEY")  # full permission key
 )
 
+
+
+# -------------------------------------------------
+# FETCH APPOINTMENT DURATION
+# -------------------------------------------------
 def get_appointment_duration(appointment_type: str) -> int | None:
     """
-    Looks up the duration (in minutes) of an appointment type from Supabase.
+    Looks up the duration of an appointment type from Supabase.
 
-    Example:
-    "cleaning" → 30 minutes
-    "checkup" → 20 minutes
+    Why this exists:
+    - The AI receptionist needs the correct duration to compute end_time
+    - Durations may vary (cleaning = 30 mins, checkup = 20 mins)
 
-    The AI receptionist uses this to calculate the end time of the appointment.
+    Returns:
+    - duration in minutes OR None if type doesn't exist
     """
 
     result = (
@@ -36,6 +46,10 @@ def get_appointment_duration(appointment_type: str) -> int | None:
     return None
 
 
+
+# -------------------------------------------------
+# LOG CALL EVENT
+# -------------------------------------------------
 def log_call_event(
     booking_status=None,
     patient_name=None,
@@ -49,21 +63,23 @@ def log_call_event(
     """
     Saves a call event into Supabase.
 
-    Logged data powers:
-    - Dentist dashboard call timeline
-    - AI agent memory (has this person booked before?)
-    - Conversion tracking
-    - Appointment history
+    Why this is important:
+    - Powers the dentist's analytics dashboard
+    - Gives AI memory of patient history (bookings, cancellations, etc.)
+    - Tracks conversions (e.g. call → booking)
+    - Stores metadata from Google Calendar
+
+    Fields saved include:
+      booking_status (booked, cancelled, rescheduled)
+      event metadata (start/end times)
+      call duration (for voice analytics)
+      patient info
     """
 
-    import uuid
-
     if call_id is None:
-        call_id = str(uuid.uuid4())
+        call_id = str(uuid.uuid4())  # generate unique call ID
 
-    # -----------------------------
-    # Extract start/end from Google event
-    # -----------------------------
+    # Extract start/end from Google Calendar event, if passed in
     booking_start = None
     booking_end = None
 
@@ -72,11 +88,9 @@ def log_call_event(
             booking_start = meta.get("start", {}).get("dateTime")
             booking_end = meta.get("end", {}).get("dateTime")
         except Exception:
-            pass
+            pass  # fail silently — safe fallback
 
-    # -----------------------------
-    # Build payload
-    # -----------------------------
+    # Build row to insert
     payload = {
         "booking_status": booking_status,
         "patient_name": patient_name,
@@ -84,13 +98,13 @@ def log_call_event(
         "call_reason": call_reason,
         "call_id": call_id,
         "duration_seconds": duration_seconds,
-        "meta": meta,
+        "meta": meta,                   # full Google event payload
         "outcome_value_eur": outcome_value_eur,
         "booking_start": booking_start,
         "booking_end": booking_end,
     }
 
-    # Remove empty values
+    # Remove empty or null fields
     clean_payload = {k: v for k, v in payload.items() if v is not None}
 
     print("Logging call event:", clean_payload)
@@ -99,19 +113,25 @@ def log_call_event(
 
 
 
-
+# -------------------------------------------------
+# FETCH ACTIVE APPOINTMENTS BY PHONE
+# -------------------------------------------------
 def find_appointments_by_phone(phone_number: str):
     """
-    Returns all ACTIVE booked appointments for a given phone number.
+    Returns ALL active (non-cancelled) booked appointments for a phone number.
 
-    Returned objects look like:
+    Why this is important:
+    - Allows the AI receptionist to say:
+      "I found a booking for you on February 5 at 3 PM."
+
+    Returns formatted appointment objects:
     {
-        "event_id": "...",
+        "event_id": "abc123",
         "summary": "Checkup",
         "start": "2025-02-05T15:00:00",
         "end": "2025-02-05T15:20:00",
-        "patient_name": "John Doe",
-        "patient_phone": "+353871234567"
+        "patient_name": "...",
+        "patient_phone": "..."
     }
     """
 
@@ -119,7 +139,7 @@ def find_appointments_by_phone(phone_number: str):
         supabase.table("call_events")
         .select("*")
         .eq("patient_phone", phone_number)
-        .eq("booking_status", "booked")
+        .eq("booking_status", "booked")  # only active bookings
         .order("created_at", desc=False)
         .execute()
     )
@@ -132,7 +152,7 @@ def find_appointments_by_phone(phone_number: str):
     for row in result.data:
         meta = row.get("meta", {})
 
-        # We only return results if there is calendar metadata
+        # Only include rows that actually contain Google Calendar metadata
         if not isinstance(meta, dict) or "id" not in meta:
             continue
 
@@ -147,10 +167,20 @@ def find_appointments_by_phone(phone_number: str):
 
     return appointments
 
+
+
+# -------------------------------------------------
+# GET DURATION FOR TYPE (STRICT VERSION)
+# -------------------------------------------------
 def get_duration_for_type(appointment_type: str) -> int:
     """
-    Returns the duration (in minutes) for the given appointment type.
-    Example: 'cleaning' -> 60
+    Returns duration for the given appointment type.
+
+    Unlike get_appointment_duration(), this version:
+    - Does NOT default to None
+    - Raises an exception if the appointment type is unknown
+
+    This is used in places where the duration MUST exist.
     """
 
     result = (
@@ -166,16 +196,31 @@ def get_duration_for_type(appointment_type: str) -> int:
 
     return result.data["duration_minutes"]
 
+
+
+# -------------------------------------------------
+# CALCULATE END TIME FOR APPOINTMENTS
+# -------------------------------------------------
 from dateutil import parser
 from datetime import datetime, timedelta
 
 def calculate_end_time(start_input, duration_minutes):
     """
-    Accepts either:
-    - ISO string
+    Calculates the end time of an appointment.
+
+    Accepts:
+    - ISO string (e.g., "2025-02-05T15:00:00")
     - datetime object
+
+    Returns:
+    - datetime object of the end time
+
+    Used by:
+    - booking 
+    - rescheduling
     """
 
+    # Convert string → datetime
     if isinstance(start_input, datetime):
         start_dt = start_input
     else:
@@ -183,6 +228,3 @@ def calculate_end_time(start_input, duration_minutes):
 
     end_dt = start_dt + timedelta(minutes=duration_minutes)
     return end_dt
-
-
-

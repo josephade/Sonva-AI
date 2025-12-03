@@ -7,29 +7,31 @@ from dateutil import parser
 
 load_dotenv()
 
-# Google Calendar permission scope
-# This tells Google what the service account is allowed to do.
-# "calendar" means full access: create, update, delete events.
+# Google Calendar API permissions.
+# This scope gives FULL read/write access to the calendar.
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 GOOGLE_CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID")
 
 
+# -------------------------------------------------
+# CREATE GOOGLE CALENDAR API CLIENT
+# -------------------------------------------------
 def get_calendar_service():
     """
     Creates and returns a Google Calendar API client.
-    
+
     What this function does:
-    - Loads your service account credentials from environment variables
-    - Converts the private key into the correct format
-    - Authenticates with Google Calendar
-    - Returns a 'service' object that can make API calls
-    
-    You call this whenever you want to create, update, or delete calendar events.
+    - Reads service account information from environment variables
+    - Reconstructs the JSON credentials object Google expects
+    - Authenticates using the service account
+    - Returns a 'service' instance for performing Google Calendar operations
+
+    You call this when creating, updating, reading, or deleting calendar events.
     """
 
-    # Build a dictionary from environment variables.
-    # This is the same format as a Google service account JSON file.
+    # Build credentials dictionary from env variables
+    # Equivalent to loading an actual JSON key file
     creds_info = {
         "type": "service_account",
         "client_email": os.getenv("GOOGLE_CLIENT_EMAIL"),
@@ -37,33 +39,36 @@ def get_calendar_service():
         "token_uri": "https://oauth2.googleapis.com/token",
     }
 
-    # Turn dict into Google credentials
+    # Create credentials object
     credentials = service_account.Credentials.from_service_account_info(
         creds_info, scopes=SCOPES
     )
 
-    # Build the actual Calendar service
-    return build("calendar", "v3", credentials=credentials)
+    # Build Google Calendar client
+    return build("calendar", "v3", credentials=credentials, cache_discovery=False)
 
 
+
+# -------------------------------------------------
+# CREATE EVENT
+# -------------------------------------------------
 def create_event(summary, start, duration_minutes, patient_phone, patient_name=None):
     """
-    Creates a new appointment in Google Calendar.
+    Creates an appointment in Google Calendar.
 
-    What this function does:
-    1. Connects to Google Calendar using our service account
-    2. Calculates the event end time based on duration
-    3. Creates an event object with details (title, description, start, end)
-    4. Adds extra hidden metadata like patient name and phone number
-    5. Sends the event to Google Calendar and returns the created event
-    
-    This is called when the AI receptionist books an appointment.
+    Steps:
+    1. Connects to Google Calendar
+    2. Calculates end time based on duration
+    3. Builds an event payload with metadata
+    4. Saves event to Google Calendar
+    5. Returns the created event
+
+    Used when the AI receptionist books a new appointment.
     """
 
     service = get_calendar_service()
     end = start + timedelta(minutes=duration_minutes)
 
-    # Build the calendar event payload
     event = {
         "summary": summary.capitalize(),
         "description": (
@@ -77,68 +82,75 @@ def create_event(summary, start, duration_minutes, patient_phone, patient_name=N
             "private": {
                 "patient_phone": patient_phone,
                 "patient_name": patient_name or "",
-                "source": "AI",
+                "source": "AI",                  # used internally for tracking AI-created events
                 "duration": str(duration_minutes)
             }
         },
     }
 
-    # Send event to Google Calendar
     return (
         service.events()
-        .insert(calendarId=os.getenv("GOOGLE_CALENDAR_ID"), body=event)
+        .insert(calendarId=GOOGLE_CALENDAR_ID, body=event)
         .execute()
     )
 
 
+
+# -------------------------------------------------
+# DELETE EVENT
+# -------------------------------------------------
 def delete_event(event_id: str):
     """
     Deletes an event from Google Calendar.
 
     What this function does:
     - Connects to Google Calendar
-    - Deletes an event using its event_id
-    - Returns a simple confirmation dictionary
+    - Calls the delete operation using event_id
+    - Returns a confirmation object
 
-    This is used whenever a patient cancels their appointment.
+    Used when a patient cancels their appointment.
     """
 
     service = get_calendar_service()
 
     service.events().delete(
-        calendarId=os.getenv("GOOGLE_CALENDAR_ID"),
+        calendarId=GOOGLE_CALENDAR_ID,
         eventId=event_id,
     ).execute()
 
     return {"status": "cancelled", "event_id": event_id}
 
 
+
+# -------------------------------------------------
+# UPDATE (RESCHEDULE) EVENT
+# -------------------------------------------------
 def update_event(event_id: str, new_start: datetime, duration_minutes: int):
     """
-    Updates (reschedules) an existing calendar event.
+    Updates an existing calendar event.
 
-    What this function does:
-    1. Connects to Google Calendar
-    2. Fetches the existing event using event_id
-    3. Recalculates the end time
-    4. Updates the start and end times
-    5. Sends the updated event back to Google
-    
-    This is used when a patient reschedules an appointment.
+    Steps:
+    1. Fetches the event
+    2. Calculates a new end time
+    3. Replaces existing start/end with updated values
+    4. Pushes the update to Google Calendar
+    5. Returns the updated event
+
+    Used when a patient reschedules an appointment.
     """
 
     service = get_calendar_service()
 
-    # Fetch the existing event
+    # Fetch event to modify
     event = (
         service.events()
-        .get(calendarId=os.getenv("GOOGLE_CALENDAR_ID"), eventId=event_id)
+        .get(calendarId=GOOGLE_CALENDAR_ID, eventId=event_id)
         .execute()
     )
 
     new_end = new_start + timedelta(minutes=duration_minutes)
 
-    # Overwrite start + end times
+    # Overwrite date/time values
     event["start"] = {
         "dateTime": new_start.isoformat(),
         "timeZone": "Europe/Dublin",
@@ -148,58 +160,60 @@ def update_event(event_id: str, new_start: datetime, duration_minutes: int):
         "timeZone": "Europe/Dublin",
     }
 
-    # Save the updated event
+    # Send updated event to Google
     return (
         service.events()
-        .update(calendarId=os.getenv("GOOGLE_CALENDAR_ID"), eventId=event_id, body=event)
+        .update(calendarId=GOOGLE_CALENDAR_ID, eventId=event_id, body=event)
         .execute()
     )
 
+
+
+# -------------------------------------------------
+# CHECK FREE/BUSY RANGE
+# -------------------------------------------------
 def get_freebusy(start: datetime, end: datetime):
     """
-    Fetches all busy time ranges from Google Calendar between start and end.
+    Uses the FreeBusy API to retrieve every busy block between start and end.
 
-    What this does:
-    - Uses Google Calendar FreeBusy API
-    - Asks Google which times are already booked
-    - Returns a list of busy periods so we know which times to avoid
+    This is helpful when:
+    - Checking availability for multiple slots
+    - Finding long consecutive free periods
     """
-
     service = get_calendar_service()
 
     body = {
         "timeMin": start.isoformat(),
         "timeMax": end.isoformat(),
         "timeZone": "Europe/Dublin",
-        "items": [{"id": os.getenv("GOOGLE_CALENDAR_ID")}]
+        "items": [{"id": GOOGLE_CALENDAR_ID}]
     }
 
     response = service.freebusy().query(body=body).execute()
 
-    return response["calendars"][os.getenv("GOOGLE_CALENDAR_ID")]["busy"]
-
-def get_calendar_service():
-    creds_info = {
-        "type": "service_account",
-        "client_email": os.getenv("GOOGLE_CLIENT_EMAIL"),
-        "private_key": os.getenv("GOOGLE_PRIVATE_KEY").replace("\\n", "\n"),
-        "token_uri": "https://oauth2.googleapis.com/token",
-    }
-
-    credentials = service_account.Credentials.from_service_account_info(
-        creds_info, scopes=SCOPES
-    )
-
-    return build("calendar", "v3", credentials=credentials, cache_discovery=False)
+    # FreeBusy API response structure:
+    # { "calendars": { "calendar_id": { "busy": [ {start,end}, ... ] } } }
+    return response["calendars"][GOOGLE_CALENDAR_ID]["busy"]
 
 
 
+# -------------------------------------------------
+# CHECK IF A TIME SLOT IS FREE
+# -------------------------------------------------
 def is_time_available(start_dt, end_dt):
     """
-    Convert datetime objects into ISO8601 strings that Google accepts.
-    No Z. No double timezone. Just pure isoformat().
+    Checks if a time range is free in Google Calendar.
+
+    Accepts:
+    - datetime objects OR already formatted ISO strings
+
+    Steps:
+    1. Convert to ISO8601 without milliseconds
+    2. Query Google Calendar for overlapping events
+    3. Return True if no events overlap
     """
 
+    # Convert datetime → ISO string if needed
     if isinstance(start_dt, datetime):
         start_dt = start_dt.replace(microsecond=0).isoformat()
 
@@ -211,7 +225,7 @@ def is_time_available(start_dt, end_dt):
     events_result = (
         service.events()
         .list(
-            calendarId=os.getenv("GOOGLE_CALENDAR_ID"),
+            calendarId=GOOGLE_CALENDAR_ID,
             timeMin=start_dt,
             timeMax=end_dt,
             singleEvents=True,
@@ -221,25 +235,36 @@ def is_time_available(start_dt, end_dt):
     )
 
     events = events_result.get("items", [])
-    return len(events) == 0
+    return len(events) == 0  # True ⇒ slot is available
 
 
+
+# -------------------------------------------------
+# FIND NEXT AVAILABLE SLOT
+# -------------------------------------------------
 def find_next_available_slot(start_time: datetime, duration_minutes: int):
     """
-    Looks forward through the day in blocks until it finds a free slot.
-    Accepts a datetime object, not a string.
+    Finds the next free appointment slot by checking 15-minute increments.
+
+    Steps:
+    - Start at the requested time
+    - Check availability
+    - If taken, move forward by 15 minutes
+    - Continue until a free slot is found
     """
-    current = start_time  # already a datetime object
+
+    current = start_time  # datetime
     step = timedelta(minutes=15)
 
     while True:
         end_time = current + timedelta(minutes=duration_minutes)
 
+        # If free slot → return it
         if is_time_available(current, end_time):
             return {
                 "start": current.isoformat(),
                 "end": end_time.isoformat()
             }
 
+        # Otherwise move forward
         current += step
-
