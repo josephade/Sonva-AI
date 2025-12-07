@@ -12,7 +12,7 @@ load_dotenv()
 # This avoids repeatedly opening new HTTP connections on each request.
 supabase = create_client(
     os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")  # full permission key
+    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 )
 
 
@@ -228,3 +228,96 @@ def calculate_end_time(start_input, duration_minutes):
 
     end_dt = start_dt + timedelta(minutes=duration_minutes)
     return end_dt
+
+# -------------------------------------------------
+# CREATE NEW CALL ROW (CALL STARTED)
+# -------------------------------------------------
+def create_call_row(call_id: str, phone_number: str):
+    """
+    Inserts a new row into call_events when a call starts.
+    Ensures ALL required fields exist with defaults.
+    """
+
+    payload = {
+        "call_id": call_id,
+        "patient_phone": phone_number,
+        "event_type": "call_started",
+        "call_status": "in_progress",
+
+        # Defaults for all required columns
+        "transcript": "",
+        "summary": "",
+        "intent": "",
+        "patient_name": "",
+        "patient_age": None,
+        "patient_dob": None,
+        "patient_insurance": "",
+        "duration_seconds": 0,
+        "booking_status": "none",
+        "booking_start": None,
+        "booking_end": None,
+        "recording_url": "",
+        "audio_url": "",
+        "meta": {},
+    }
+
+    return supabase.table("call_events").insert(payload).execute()
+
+# -------------------------------------------------
+# APPEND TRANSCRIPT CHUNK
+# -------------------------------------------------
+def append_transcript(call_id: str, text: str):
+    """
+    Adds transcript text to the existing transcript.
+    """
+
+    row = (
+        supabase.table("call_events")
+        .select("transcript")
+        .eq("call_id", call_id)
+        .single()
+        .execute()
+    )
+
+    old_text = row.data.get("transcript") or ""
+    new_text = old_text + "\n" + text
+
+    supabase.table("call_events").update({
+        "transcript": new_text
+    }).eq("call_id", call_id).execute()
+
+# -------------------------------------------------
+# UPDATE CALL ROW (ANY FIELDS)
+# -------------------------------------------------
+def update_call(call_id: str, fields: dict):
+    """
+    Generic update helper — updates ANY field(s)
+    in the call_events row for the given call_id.
+    """
+
+    print(f"Updating call {call_id}: {fields}")
+
+    supabase.table("call_events").update(fields).eq("call_id", call_id).execute()
+
+# -------------------------------------------------
+# UPDATE META JSON FIELD
+# -------------------------------------------------
+def update_meta_json(call_id: str, new_meta: dict):
+    """
+    Safely merges new metadata into the existing meta JSONB.
+    """
+
+    row = (
+        supabase.table("call_events")
+        .select("meta")
+        .eq("call_id", call_id)
+        .single()
+        .execute()
+    )
+
+    old = row.data.get("meta") or {}
+    merged = {**old, **new_meta}
+
+    supabase.table("call_events").update({
+        "meta": merged
+    }).eq("call_id", call_id).execute()

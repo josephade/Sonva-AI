@@ -1,73 +1,78 @@
-from fastapi import APIRouter, Request, HTTPException
-import json
-from app.services.supabase_client import log_call_event
-from app.routers.booking import book, cancel, reschedule
+from fastapi import APIRouter, Request
+from app.services.supabase_client import (
+    create_call_row,
+    update_call,
+    append_transcript,
+    update_meta_json
+)
 
 router = APIRouter()
 
-# -----------------------------
-# Telnyx Webhook Endpoint
-# -----------------------------
-
 @router.post("/webhook")
 async def telnyx_webhook(request: Request):
-    """
-    MAIN ENTRY POINT FOR TELNYX LLM AGENT
-    -------------------------------------
-    The Telnyx LLM agent sends:
-        - intents (book, cancel, reschedule)
-        - call events
-        - NLU extracted data
-    """
+    body = await request.json()
+    event = body["data"]["event_type"]
+    payload = body["data"]["payload"]
 
-    try:
-        body = await request.json()
-    except:
-        raise HTTPException(status_code=400, detail="Invalid JSON from Telnyx")
+    call_id = payload.get("call_control_id")
 
-    # Log raw payload for debugging (optional)
-    log_call_event(
-        event_type="telnyx_raw",
-        meta=body
-    )
+    # -----------------------------------------
+    # CALL STARTED
+    # -----------------------------------------
+    if event == "ai.call.started":
+        create_call_row(
+            call_id=call_id,
+            phone_number=payload.get("caller_number")
+        )
 
-    intent = body.get("intent")
+    # -----------------------------------------
+    # TRANSCRIPT (patient speaking)
+    # -----------------------------------------
+    if event == "ai.message.received":
+        append_transcript(call_id, payload.get("text", ""))
 
-    # -----------------------------
-    #  BOOKING
-    # -----------------------------
-    if intent == "book":
-        try:
-            req = body["data"]
-            return book(req)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
+    # -----------------------------------------
+    # INTENT DETECTED
+    # -----------------------------------------
+    if event == "ai.intent.detected":
+        update_call(call_id, {"intent": payload.get("intent")})
 
-    # -----------------------------
-    #  CANCELLATION
-    # -----------------------------
-    if intent == "cancel":
-        try:
-            req = body["data"]
-            return cancel(req)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
+    # -----------------------------------------
+    # PARAMETERS / ENTITIES (patient data)
+    # -----------------------------------------
+    if event == "ai.parameters.extracted":
+        entities = payload.get("entities", {})
+        update_call(call_id, {
+            "patient_name": entities.get("patient_name"),
+            "patient_age": entities.get("age"),
+            "patient_dob": entities.get("dob"),
+            "patient_insurance": entities.get("insurance"),
+        })
 
-    # -----------------------------
-    #  RESCHEDULE
-    # -----------------------------
-    if intent == "reschedule":
-        try:
-            req = body["data"]
-            return reschedule(req)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
+        update_meta_json(call_id, {"entities": entities})
 
-    # -----------------------------
-    # CALL ENDED EVENT
-    # -----------------------------
-    if intent == "call_end":
-        log_call_event(event_type="call_end", meta=body)
-        return {"status": "logged"}
+    # -----------------------------------------
+    # SUMMARY
+    # -----------------------------------------
+    if event == "ai.summary.generated":
+        update_call(call_id, {"summary": payload.get("summary")})
 
-    return {"message": "Webhook received", "intent": intent}
+    # -----------------------------------------
+    # RECORDING
+    # -----------------------------------------
+    if event == "ai.recording.available":
+        update_call(call_id, {
+            "recording_url": payload.get("recording_url")
+        })
+
+    # -----------------------------------------
+    # CALL ENDED → SAVE DURATION
+    # -----------------------------------------
+    if event == "ai.call.ended":
+        duration = payload.get("duration_seconds")
+        update_call(call_id, {
+            "duration_seconds": duration,
+            "call_status": "completed"
+        })
+
+    return {"received": True}

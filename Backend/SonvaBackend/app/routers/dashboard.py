@@ -121,3 +121,46 @@ def filter_events(event_type: str = None):
     result = query.order("created_at", desc=True).execute()
 
     return {"results": result.data}
+
+@router.get("/calls", dependencies=[Depends(verify_admin)])
+def get_all_calls():
+    """
+    Returns all calls for the dashboard table.
+    Sorted by newest first.
+    """
+
+    result = (
+        supabase.table("call_events")
+        .select("id, call_id, patient_phone, patient_name, booking_status, call_status, intent, created_at, duration_seconds")
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return {"calls": result.data}
+
+@router.get("/calls/{call_id}", dependencies=[Depends(verify_admin)])
+def get_call_details(call_id: str):
+    """
+    Returns full call details for the right-side panel:
+    - Summary
+    - Transcript
+    - Recording
+    - Patient info
+    - Booking info
+    - Meta data
+    """
+
+    result = (
+        supabase.table("call_events")
+        .select("*")
+        .eq("call_id", call_id)
+        .single()
+        .execute()
+    )
+
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Call not found")
+
+    return result.data
+
+
