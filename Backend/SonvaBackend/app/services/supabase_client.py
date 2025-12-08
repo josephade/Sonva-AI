@@ -15,6 +15,23 @@ supabase = create_client(
     os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 )
 
+def handle_direct_booking(body: dict):
+    appointment_type = body["appointment_type"]
+    start = body["start"]
+    patient_phone = body["patient_phone"]
+    patient_name = body["patient_name"]
+
+    # Run your real booking logic
+    # Example:
+    duration = get_appointment_duration(appointment_type)
+    if not duration:
+        return {"success": False, "error": "Unknown appointment type"}
+
+    # Then create on Google Calendar
+    # ...
+
+    return {"success": True, "message": "Booking created"}
+
 
 
 # -------------------------------------------------

@@ -3,16 +3,34 @@ from app.services.supabase_client import (
     create_call_row,
     update_call,
     append_transcript,
-    update_meta_json
+    update_meta_json, 
+    handle_direct_booking
 )
 
 router = APIRouter()
 
+
+
+
 @router.post("/webhook")
 async def telnyx_webhook(request: Request):
     body = await request.json()
-    event = body["data"]["event_type"]
-    payload = body["data"]["payload"]
+
+    # -----------------------------------------
+    # CASE 1 — Telnyx Test Webhook (direct booking)
+    # -----------------------------------------
+    if "appointment_type" in body:
+        return handle_direct_booking(body)
+
+
+    # -----------------------------------------
+    # CASE 2 — Real Telnyx AI Assistant events
+    # -----------------------------------------
+    try:
+        event = body["data"]["event_type"]
+        payload = body["data"]["payload"]
+    except Exception as e:
+        return {"error": "Invalid Telnyx payload", "detail": str(e)}
 
     call_id = payload.get("call_control_id")
 
