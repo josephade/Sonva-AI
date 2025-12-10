@@ -61,7 +61,7 @@ def process_booking_task(req: BookRequest):
 
     try:
         # Step 1 — Extract and calculate time
-        start_dt = parse_iso_datetime(req.start)
+        start_dt = req.start
         appointment_duration = get_duration_for_type(req.appointment_type)
 
         if appointment_duration is None:
