@@ -1,6 +1,7 @@
 import os
 from app.services.supabase_client import supabase
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
+from datetime import datetime, timedelta
 from app.models.booking_models import (
     BookRequest,
     CancelRequest,
@@ -12,7 +13,8 @@ from app.services.google_calender import (
     update_event,
     find_next_available_slot,
     is_time_available,
-    get_calendar_service
+    get_calendar_service,
+    parse_iso_datetime
 )
 from app.services.supabase_client import (
     get_appointment_duration,
@@ -26,60 +28,78 @@ router = APIRouter()
 
 GOOGLE_CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID")
 
-
 # -------------------------------------------------
-# BOOK APPOINTMENT
+# BOOK APPOINTMENT (Instant response for Telnyx)
 # -------------------------------------------------
 @router.post("/book")
-def book(req: BookRequest):
+def book(req: BookRequest, background: BackgroundTasks):
     """
-    BOOK AN APPOINTMENT
-    --------------------
-    Steps:
-      1. Convert provided start time and calculate end time based on duration
-      2. Check if the chosen time is free
-      3. Create the appointment in Google Calendar
-      4. Log the booking into Supabase
+    BOOK AN APPOINTMENT (Async via Background Task)
+    -----------------------------------------------
+    Fast response to Telnyx. Booking is processed in background.
+    Steps executed in background:
+      1. Convert start time + calculate end time
+      2. Check slot availability
+      3. Create event in Google Calendar
+      4. Log booking in Supabase
     """
 
-    # Convert input start time to datetime and calculate end time
-    start_dt = req.start
-    appointment_duration = get_duration_for_type(req.appointment_type)
-    end_dt = calculate_end_time(start_dt.isoformat(), appointment_duration)
+    # Queue background processing
+    background.add_task(process_booking_task, req)
 
-    # Step 1 — Check slot availability
-    # If slot is taken, suggest the next available open time
-    if not is_time_available(start_dt, end_dt):
-        suggested = find_next_available_slot(start_dt, appointment_duration)
+    # Respond immediately (prevents Telnyx timeout)
+    return {
+        "status": "queued",
+        "message": "Booking request received and is being processed."
+    }
 
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "error": "slot_taken",
-                "message": "That time slot is already booked.",
-                "suggested_time": suggested,
-            },
+def process_booking_task(req: BookRequest):
+    """
+    Runs the ACTUAL booking logic.
+    This is executed outside of the Telnyx request.
+    """
+
+    try:
+        # Step 1 — Extract and calculate time
+        start_dt = parse_iso_datetime(req.start)
+        appointment_duration = get_duration_for_type(req.appointment_type)
+
+        if appointment_duration is None:
+            print(f"[ERROR] Unknown appointment type: {req.appointment_type}")
+            return
+        
+        end_dt = calculate_end_time(start_dt.isoformat(), appointment_duration)
+
+        # Step 2 — Check availability
+        if not is_time_available(start_dt, end_dt):
+            suggested = find_next_available_slot(start_dt, appointment_duration)
+            print(f"[BOOKING FAILED] Slot unavailable. Suggested: {suggested}")
+            return
+
+        # Step 3 — Create Google Calendar event
+        event = create_event(
+            summary=req.appointment_type,
+            start=start_dt,
+            duration_minutes=appointment_duration,
+            patient_phone=req.patient_phone,
+            patient_name=req.patient_name
         )
 
-    # Step 2 — Create Google Calendar Event
-    event = create_event(
-        summary=req.appointment_type,
-        start=start_dt,
-        duration_minutes=appointment_duration,
-        patient_phone=req.patient_phone,
-        patient_name=req.patient_name
-    )
+        # Step 4 — Log into Supabase
+        log_call_event(
+            booking_status="booked",
+            patient_name=req.patient_name,
+            patient_phone=req.patient_phone,
+            call_reason=req.appointment_type,
+            meta=event
+        )
 
-    # Step 3 — Log the booking into Supabase history table
-    log_call_event(
-        booking_status="booked",
-        patient_name=req.patient_name,
-        patient_phone=req.patient_phone,
-        call_reason=req.appointment_type,
-        meta=event
-    )
+        print(f"[BOOKING SUCCESS] {req.patient_name} → {start_dt}")
 
-    return {"status": "success", "event": event}
+    except Exception as e:
+        print("[BOOKING ERROR]", e)
+
+
 
 
 
@@ -97,7 +117,7 @@ def cancel(req: CancelRequest):
       3. Log the cancellation in Supabase
     """
 
-    # Step 1 — Fetch event BEFORE deleting it
+    # Step 1 - Fetch event BEFORE deleting it
     # This ensures we still have patient details for logging
     service = get_calendar_service()
     event = service.events().get(
@@ -110,10 +130,10 @@ def cancel(req: CancelRequest):
     patient_name = private.get("patient_name")
     patient_phone = private.get("patient_phone")
 
-    # Step 2 — Remove the event from Google Calendar
+    # Step 2 - Remove the event from Google Calendar
     delete_event(req.event_id)
 
-    # Step 3 — Log cancellation in Supabase
+    # Step 3 - Log cancellation in Supabase
     log_call_event(
         booking_status="cancelled",
         call_reason="cancellation",
@@ -142,7 +162,7 @@ def reschedule(req: RescheduleRequest):
 
     service = get_calendar_service()
 
-    # Step 1 — Fetch original event
+    # Step 1 - Fetch original event
     event = service.events().get(
         calendarId=GOOGLE_CALENDAR_ID,
         eventId=req.event_id
@@ -153,10 +173,10 @@ def reschedule(req: RescheduleRequest):
     patient_name = private.get("patient_name")
     patient_phone = private.get("patient_phone")
 
-    # Extract original appointment duration, defaulting to 30 mins
+    # Extract original appointment duration, defaulting to 30 mins - Should remove the "default" later
     original_duration = int(private.get("duration", 30))
 
-    # Step 2 — Update event with SAME duration but new start time
+    # Step 2 - Update event with SAME duration but new start time
     updated = update_event(
         event_id=req.event_id,
         new_start=req.new_start,
@@ -202,7 +222,7 @@ def get_bookings_by_phone(phone: str):
 
     service = get_calendar_service()
 
-    # Step 1 — Fetch EVERY event from the Google Calendar
+    # Step 1 - Fetch EVERY event from the Google Calendar
     events_result = service.events().list(
         calendarId=GOOGLE_CALENDAR_ID,
         singleEvents=True,
@@ -218,7 +238,7 @@ def get_bookings_by_phone(phone: str):
         if ext.get("patient_phone") == phone:
             user_events.append(ev)
 
-    # Step 2 — Fetch all cancelled event IDs from Supabase
+    # Step 2 - Fetch all cancelled event IDs from Supabase
     cancelled = (
         supabase.table("call_events")
         .select("meta")
@@ -233,13 +253,13 @@ def get_bookings_by_phone(phone: str):
         if item.get("meta") and item["meta"].get("event_id")
     }
 
-    # Step 3 — Only keep events NOT cancelled
+    # Step 3 - Only keep events NOT cancelled
     active_events = [
         ev for ev in user_events
         if ev.get("id") not in cancelled_ids
     ]
 
-    # Step 4 — Format data for response
+    # Step 4 - Format data for response
     formatted = []
     for ev in active_events:
         ext = ev.get("extendedProperties", {}).get("private", {})

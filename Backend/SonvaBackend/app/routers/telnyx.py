@@ -9,22 +9,19 @@ from app.services.supabase_client import (
 
 router = APIRouter()
 
-
-
-
 @router.post("/webhook")
 async def telnyx_webhook(request: Request):
     body = await request.json()
 
     # -----------------------------------------
-    # CASE 1 — Telnyx Test Webhook (direct booking)
+    # CASE 1 - Telnyx Test Webhook
     # -----------------------------------------
     if "appointment_type" in body:
         return handle_direct_booking(body)
 
 
     # -----------------------------------------
-    # CASE 2 — Real Telnyx AI Assistant events
+    # CASE 2 - Real Telnyx AI Assistant events
     # -----------------------------------------
     try:
         event = body["data"]["event_type"]

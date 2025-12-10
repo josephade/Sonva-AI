@@ -6,7 +6,7 @@ import uuid
 load_dotenv()
 
 # -------------------------------------------------
-# SUPABASE CLIENT (GLOBAL SINGLETON)
+# SUPABASE CLIENT
 # -------------------------------------------------
 # We create the client ONCE so the entire FastAPI backend shares it.
 # This avoids repeatedly opening new HTTP connections on each request.
@@ -21,14 +21,9 @@ def handle_direct_booking(body: dict):
     patient_phone = body["patient_phone"]
     patient_name = body["patient_name"]
 
-    # Run your real booking logic
-    # Example:
     duration = get_appointment_duration(appointment_type)
     if not duration:
         return {"success": False, "error": "Unknown appointment type"}
-
-    # Then create on Google Calendar
-    # ...
 
     return {"success": True, "message": "Booking created"}
 
@@ -105,7 +100,7 @@ def log_call_event(
             booking_start = meta.get("start", {}).get("dateTime")
             booking_end = meta.get("end", {}).get("dateTime")
         except Exception:
-            pass  # fail silently — safe fallback
+            pass  # fail silently - safe fallback
 
     # Build row to insert
     payload = {
@@ -187,7 +182,7 @@ def find_appointments_by_phone(phone_number: str):
 
 
 # -------------------------------------------------
-# GET DURATION FOR TYPE (STRICT VERSION)
+# GET DURATION FOR TYPE
 # -------------------------------------------------
 def get_duration_for_type(appointment_type: str) -> int:
     """
@@ -247,7 +242,7 @@ def calculate_end_time(start_input, duration_minutes):
     return end_dt
 
 # -------------------------------------------------
-# CREATE NEW CALL ROW (CALL STARTED)
+# CREATE NEW CALL ROW
 # -------------------------------------------------
 def create_call_row(call_id: str, phone_number: str):
     """
@@ -321,7 +316,7 @@ def update_call(call_id: str, fields: dict):
 # -------------------------------------------------
 def update_meta_json(call_id: str, new_meta: dict):
     """
-    Safely merges new metadata into the existing meta JSONB.
+    Safely merges new metadata into the existing meta JSON.
     """
 
     row = (

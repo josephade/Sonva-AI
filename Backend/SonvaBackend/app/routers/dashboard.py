@@ -27,7 +27,6 @@ def verify_admin(api_key: str = Header(None)):
 # -----------------------------
 # DASHBOARD ROUTES
 # -----------------------------
-
 @router.get("/stats", dependencies=[Depends(verify_admin)])
 def dashboard_stats():
     """

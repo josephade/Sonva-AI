@@ -196,7 +196,6 @@ def get_freebusy(start: datetime, end: datetime):
     return response["calendars"][GOOGLE_CALENDAR_ID]["busy"]
 
 
-
 # -------------------------------------------------
 # CHECK IF A TIME SLOT IS FREE
 # -------------------------------------------------
@@ -268,3 +267,18 @@ def find_next_available_slot(start_time: datetime, duration_minutes: int):
 
         # Otherwise move forward
         current += step
+
+from datetime import datetime, timezone
+
+def parse_iso_datetime(dt: str):
+    # Replace Z → +00:00
+    if dt.endswith("Z"):
+        dt = dt.replace("Z", "+00:00")
+
+    obj = datetime.fromisoformat(dt)
+
+    # If no timezone, assume UTC
+    if obj.tzinfo is None:
+        obj = obj.replace(tzinfo=timezone.utc)
+
+    return obj
