@@ -94,7 +94,7 @@ const Navbar = () => {
                 transition-colors
               "
             >
-              Book Demo
+              Use Cases
             </a>
             <a
               href="#login"
