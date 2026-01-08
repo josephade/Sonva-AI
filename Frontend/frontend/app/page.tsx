@@ -45,8 +45,8 @@ export default function HomePage() {
         <Integrations />
         <BookNowCTA />
         <StatsSection />
-        <DentistImageShowcase />
-        <BookNowCTA />
+        {/* <DentistImageShowcase /> */}
+        {/* <BookNowCTA /> */}
         <FAQ />
         
         <section className="py-32 relative overflow-hidden bg-slate-900 text-white">
