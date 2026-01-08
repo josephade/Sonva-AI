@@ -38,7 +38,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenDemo }) => {
           className="inline-flex items-center gap-2 px-4 py-1 mb-6 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-bold"
         >
           <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
-          Now supporting NHS & Private Clinics
+          Now supporting HSE & Private Clinics
         </motion.div>
 
         {/* Headline */}
@@ -48,10 +48,10 @@ const Hero: React.FC<HeroProps> = ({ onOpenDemo }) => {
           transition={{ duration: 0.8 }}
           className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-[#0F172A] mb-6"
         >
-          Your Dental Receptionist,
+          Your Front Desk Is,
           <br className="hidden md:block" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-purple-600">
-            Powered by AI.
+            Losing You Bookings.
           </span>
         </motion.h1>
 
@@ -62,8 +62,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenDemo }) => {
           transition={{ duration: 0.6 }}
           className="text-base md:text-xl text-slate-500 mb-8 max-w-3xl"
         >
-          Sonva answers every call, books appointments instantly, and gives your
-          clinic a world-class patient experience — 24/7.
+          Complete Lead Generation + Voice AI System. Sonva generates, qualifies, and schedules your leads automatically - built for Irish and UK clinics.
         </motion.p>
 
         {/* CTAs */}
