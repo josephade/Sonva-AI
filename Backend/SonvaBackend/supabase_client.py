@@ -1,20 +1,30 @@
 import os
+from typing import Optional
+from pathlib import Path
 from supabase import create_client
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from SonvaBackend directory
+env_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
-supabase = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+if not supabase_url or not supabase_key:
+    raise ValueError(
+        "Missing required environment variables. Please create a .env file in the SonvaBackend directory "
+        "with SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
+    )
+
+supabase = create_client(supabase_url, supabase_key)
 
 
 # ----------------------------------
 # Fetch appointment duration
 # ----------------------------------
 
-def get_appointment_duration(appointment_type: str) -> int | None:
+def get_appointment_duration(appointment_type: str) -> Optional[int]:
     """Fetch duration_minutes from appointment_types table."""
     result = (
         supabase.table("appointment_types")
@@ -35,14 +45,14 @@ def get_appointment_duration(appointment_type: str) -> int | None:
 # ----------------------------------
 
 def log_call_event(
-    booking_status: str | None = None,
-    patient_name: str | None = None,
-    patient_phone: str | None = None,
-    call_reason: str | None = None,
-    call_id: str | None = None,
-    duration_seconds: int | None = None,
-    meta: dict | None = None,
-    outcome_value_eur: float | None = None,
+    booking_status: Optional[str] = None,
+    patient_name: Optional[str] = None,
+    patient_phone: Optional[str] = None,
+    call_reason: Optional[str] = None,
+    call_id: Optional[str] = None,
+    duration_seconds: Optional[int] = None,
+    meta: Optional[dict] = None,
+    outcome_value_eur: Optional[float] = None,
 ):
     payload = {
         "booking_status": booking_status,   # booked/cancelled/rescheduled or null

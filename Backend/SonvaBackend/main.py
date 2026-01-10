@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 from google_client import create_event, delete_event, update_event
 from supabase_client import get_appointment_duration, log_call_event, find_appointments_by_phone
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,7 +23,7 @@ class BookRequest(BaseModel):
     appointment_type: str
     start: datetime
     patient_phone: str
-    patient_name: str | None = None
+    patient_name: Optional[str] = None
 
 
 class CancelRequest(BaseModel):

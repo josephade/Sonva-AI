@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+from typing import Optional
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -30,7 +31,7 @@ def create_event(
     start: datetime,
     duration_minutes: int,
     patient_phone: str,
-    patient_name: str | None = None,
+    patient_name: Optional[str] = None,
 ):
     """Create a new appointment with patient metadata."""
     service = get_calendar_service()
